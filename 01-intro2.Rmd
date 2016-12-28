@@ -4,7 +4,10 @@ author: "Prof. Adam Loy"
 date: "Math 430, Winter 2017"
 output: 
   ioslides_presentation:
-    logo: LULogo.pdf
+    fig_height: 4
+    fig_width: 4
+    out_width: 400px
+    fig_retina: null
 ---
 
 ```{r setup, include=FALSE}
@@ -22,11 +25,11 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ### Notation
 - $Y_i$: **response variable** measured on the $i^{\text{th}}$ *observational unit*, $i=1,\ldots,n$
-- $X_{i1}, X_{i2}, \ldots, X_{ik}$: **predictor/explanatory/covariate variables** measured on the $i^{\text{th}}$ *observational unit*
+- $x_{i1}, x_{i2}, \ldots, x_{ik}$: **predictor/explanatory/covariate variables** measured on the $i^{\text{th}}$ *observational unit*
 
 ### Statistical model
 
-$$Y_i = f(X_{i1}, X_{i2}, \ldots, X_{ik}) + \varepsilon$$
+$$Y_i = f(x_{i1}, x_{i2}, \ldots, x_{ik}) + \varepsilon$$
 
 where
 
@@ -90,7 +93,7 @@ Need to choose $f(x)$
 
 ### Model specification
 <br>
-```{r, echo=FALSE, warning=FALSE, message=FALSE, eval=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(fpp)
 library(forecast)
 data(ausbeer)
@@ -164,38 +167,42 @@ what distribution should $\varepsilon$ follow?
 ## Logistics
 
 ### Textbook
-- *STAT2: Building Models for a World of Data* by Cannon et al., W.H. Freeman and Company, 2013.
+- *A Modern Approach to Regression with R* by Simon J. Sheather, Springer, 2009
 - One copy on 2-hour reserve at the Mudd
 
 ### Class sessions
-- MWF will focus on learning new methods
+- 2 days per week will focus on learning new methods
 - Real examples emphasized
 
 ### Lab sessions
-- Tuesdays will focus on making sure that you are comfortable with using R for statistical modeling
+- 1 day each week will focus on making sure that you are comfortable with using R for statistical modeling
 
 
 ## Grading
 
-### Exploratory data analyses (5%)
-- You need to explore new data sets before we discuss them in class
-
-### Homework (25%)
+### Homework (50%)
 - Approximately weekly assignments
-- Typically due in class on Fridays
+- Typically due Wednesdays by 4:30
 - No late work 
 
-### Analysis projects (70%)
-- 3 projects focusing on different types of regression models
-- Due dates will be announced in class
+### Midterm (20%)
+- To ensure that everyone is keeping up with the material
+
+### Final project (30%)
+- Carryout an entire analysis of data set you choose
+- More information later
 
 ## Overview {.columns-2}
 
-### Topics
-1. Simple linear regression 
+### Topic
+1. Simple linear regression
 2. Multiple linear regression
-3. Logistic regression 
+3. Logistic regression
 
+### Chapters
+- 2--4
+- 5--7
+- 8
 
 ## A famous motivating example
 
