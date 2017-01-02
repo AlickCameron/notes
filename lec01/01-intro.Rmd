@@ -1,0 +1,197 @@
+---
+title: "Introduction to regression"
+author: "Prof. Adam Loy"
+date: "Math 430, Winter 2017"
+output: 
+  ioslides_presentation:
+    fig_height: 4
+    fig_width: 4
+    out_width: 400px
+    fig_retina: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## What is a statistical model?
+
+- A model is a representation for a particular purpose (Daniel Kaplan)
+- A simplification of reality (Cannon et al., 2010)
+- A statistical model embodies a set of assumptions concerning the generation of the observed data, and similar data from a larger population (Wikipedia)
+- Remember that all models are wrong; the practical question is how wrong do they have to be to not be useful (George Box)
+
+## What is a statistical model?
+
+### Notation
+- $Y_i$: **response variable** measured on the $i^{\text{th}}$ *observational unit*, $i=1,\ldots,n$
+- $x_{i1}, x_{i2}, \ldots, x_{ik}$: **predictor/explanatory/covariate variables** measured on the $i^{\text{th}}$ *observational unit*
+
+### Statistical model
+
+$$Y_i = f(x_{i1}, x_{i2}, \ldots, x_{ik}) + \varepsilon$$
+
+where
+
+- $f(\cdot)$: a mathematical function
+- $\varepsilon$: a random error term
+
+## Why do we model?
+
+1. Prediction
+
+2. Understanding relationships
+
+3. Assessing differences
+
+
+## Challenge: Data collection and variable selection
+
+- What data do we need to achieve our goals?
+- Can we use data to actually answer our questions?
+- What types of variables do we have?
+- What variables are actually important?
+
+
+
+## Challenge: Model specification
+
+- What is the "right" model to use? 
+- Does this choice help us achieve our goals?
+- What assumptions are embedded in our choice?
+- Are these assumptions valid?
+
+
+## Challenge: Model specification {.columns-2}
+
+<br>
+```{r, echo=FALSE}
+library(Stat2Data)
+library(ggplot2)
+data(TextPrices)
+
+p <- qplot(x = Pages, y = Price, data = TextPrices) + 
+  ylab("Textbook price") + 
+  xlab("No. of pages")
+print(p)
+```
+
+<br>
+<br>
+<br>
+<br>
+Need to choose $f(x)$
+
+
+## Challenge: Model specification {.columns-2}
+
+<br>
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(fpp)
+library(forecast)
+data(ausbeer)
+
+ausbeer.df <- data.frame(quarter = as.numeric(time(ausbeer)), production = as.numeric(ausbeer))
+
+ausbeer.arima <- auto.arima(ausbeer)
+ausbeer.df$arima <- as.numeric(fitted(ausbeer.arima))
+
+qplot(x = quarter, y = production, data = ausbeer.df) + 
+  geom_line(aes(y = arima), colour = I("#377eb8"), alpha = I(0.8)) +
+  geom_smooth(se = FALSE, colour = I("#e41a1c"), alpha = I(0.8)) + 
+  ylab("Beer production") + 
+  xlab("Year")
+```
+
+<br>
+<br>
+<br>
+<br>
+Need to choose $f(x)$
+
+
+## Challenge: Model fitting {.columns-2}
+
+```{r, echo=FALSE, message=FALSE}
+
+library(MASS)
+rmod <- rlm(Price ~ Pages, data = TextPrices)
+
+p + geom_smooth(method = "lm", se = FALSE, colour = I("#377eb8"), linetype = 1) + 
+  geom_abline(intercept = coef(rmod)[1], slope = coef(rmod)[2], colour = I("#e41a1c"), linetype = 2) + 
+  geom_abline(intercept = -10, slope = .15, colour = I("#4daf4a"), linetype = 4)
+
+```
+
+<br>
+<br>
+<br>
+<br>
+How can we estimate the unknown parameters in our model?
+
+$$f(x) = \beta_0 + \beta_1x$$
+
+What should $\beta_0$ and $\beta_1$ be?
+
+
+## Challenge: Dealing with randomness
+
+If our model is 
+
+$$Y_i = f(x_{i1}, x_{i2}, \ldots, x_{ik}) + \varepsilon$$
+
+what distribution should $\varepsilon$ follow?
+
+
+## What are we going to do in Math 430?
+
+- Learn the statistical modeling thought process 
+
+    1. Stating the problem in non-statistical terms
+    2. Assessment of data quality
+    3. Choose (specify) the model
+    4. Fit the model
+    5. Assess (validate) the model
+    6. Use the model to answer the question(s)
+    
+- We will focus on regression models
+    
+## Logistics
+
+### Textbook
+- *A Modern Approach to Regression with R* by Simon J. Sheather, Springer, 2009
+- One copy on 2-hour reserve at the Mudd
+
+### Class sessions
+- 2 days per week will focus on learning new methods
+- Real examples emphasized
+
+### Lab sessions
+- 1 day each week will focus on making sure that you are comfortable with using R for statistical modeling
+
+
+## Grading
+
+### Homework (50%)
+- Approximately weekly assignments
+- Typically due Wednesdays by 4:30 p.m.
+- No late work 
+
+### Midterm (20%)
+- To ensure that everyone is keeping up with the material
+
+### Final project (30%)
+- Carry out an entire analysis of a data set you choose
+- More information later
+
+## Overview {.columns-2}
+
+### Topic
+1. Simple linear regression
+2. Multiple linear regression
+3. Logistic regression
+
+### Chapters
+- 2--4
+- 5--7
+- 8
