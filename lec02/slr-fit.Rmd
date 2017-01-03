@@ -14,9 +14,8 @@ output:
 ---
 
 
-```{rsetup r, include=FALSE}
-mpg <- read.table(file = "data/MPGdata.txt", header = TRUE)
-
+```{r setup, include=FALSE}
+mpg <- read.csv(file = "https://github.com/math430-lu/data/raw/master/mpg.csv", as.is = TRUE)
 library(ggplot2)
 ```
 
