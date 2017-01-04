@@ -1,0 +1,184 @@
+---
+title: "Introduction to R"
+output:
+  html_document: default
+---
+
+## Overview of R Markdown files
+
+In this course we will often work with R markdown files in class. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd/Cntrl+Shift+Enter*. 
+
+```{r}
+1:10
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd/Cntrl+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+
+
+## Your First R session
+
+While you are learning the R language, remember that you are learning a new language; thus, we will start rather simply with small analysis tasks and build up to more complicated tasks. Also, you will not remember everything immediately---that's OK, it's a natural part of learning a language! 
+
+### Installing and loading R packages
+
+R does not enable all of its functionality when you open it. To enable additional functionality we need to load *R packages*. In this class we will often use the `tidyverse` R package to enable better tools for plotting, data manipulation, etc. Below is an example of installation and loading:
+
+```{r message=FALSE, eval=FALSE}
+# You only need to install a package once
+install.packages("tidyverse")
+```
+
+```{r}
+# You will need to load the package in each R markdown notebook
+library(tidyverse)
+```
+
+
+### Loading data and assignment
+
+Regression models are fit to data sets, so data will play a central role to our applied work in this course. There are multiple ways to load data sets (and we'll learn more about them later), but we often need to load a `.csv` (comma separated value) file.
+
+Today, we'll look at a data set containing information on the weight (pounds) and fuel economy (mpg) of passenger vehicles
+
+```{r}
+# Load the data and assign it a name
+mpg <- read.csv("https://github.com/math430-lu/data/raw/master/mpg.csv")
+```
+
+
+### Data frames
+
+The `mpg` object is our first example of a data frame, which is essentially a list of vectors. We can get a first glimpse of our data set in a few ways:
+
+```{r}
+# Printing the first 6 rows
+# Note that missing values are denoted by NA
+head(mpg)
+```
+
+```{r}
+# Printing the last 6 rows
+tail(mpg)
+```
+
+```{r}
+# Looking at the number of rows and columns
+dim(mpg)
+```
+
+```{r}
+# Looking at the structure
+str(mpg)
+```
+
+```{r}
+# Getting a glimpse of the structure
+glimpse(mpg)
+```
+
+
+```{r}
+# looking at the summary
+summary(mpg)
+```
+
+### Syntax: Function application
+
+We have already used functions in R---for example, `summary` is a function---so you have seen the syntax, but we need to make sure we understand what's happening.
+
+The basic pattern is
+
+```{r eval=FALSE}
+object_name <- function_name(arguments)
+```
+
+Since we often have a data set of interest, many of our functions will take the form
+
+```{r eval=FALSE}
+object_name <- function_name(data, arguments)
+```
+
+### Exploring a bivariate relationship
+
+Many factors go into determining what gas mileage a car will achieve. For now, we will focus on the weight of a car. Note that it's generally understood that heavier cars will get worse fuel economy, but it is not clear how much of an increase in weight will lead to a decrease in fuel economy.
+
+Notation for regression models:
+
+$y_i =$ fuel economy for $i^{\text{th}}$ car
+
+$x_i =$ weight of $i^{\text{th}}$ car
+
+$i = 1, \ldots, n$
+
+$n =$ sample size
+
+#### Scatterplots
+
+The best place to start exploring the relationship between two quantitative variables is with a scatterplot.
+
+```{r, fig.height=4, fig.width=4}
+ggplot(data = mpg, mapping = aes(x = weight, y = mpg)) + 
+  geom_point() +
+  labs(x = "weight (lbs.)", y = "fuel economy (mpg)")
+```
+
+When examining a scatterplot we must keep the following features in mind:
+
+* Form
+* Direction
+* Strength
+* Outliers / unusual features
+
+#### Correlation
+
+We can also quantify the strength of the linear relationship between two quantitative variables using correlation.
+
+**Formula:**
+$$Corr(X, Y) = r = \dfrac{1}{n-1} \sum_{i = 1}^n \left( \dfrac{x_i - \overline{x}}{s_x} \right) \left( \dfrac{y_i - \overline{y}}{s_y} \right)$$
+
+**Key properties:**
+
+  1. $-1 \le r \le 1$
+  2. scale invariant
+  
+```{r}
+cor(mpg$weight, mpg$mpg)
+```
+
+**Caution:**
+
+Correlation only measures the strength/direction of **linear relationships**
+
+
+```{r}
+x <- -5:5
+y <- x^2
+cor(x, y)
+```
+
+```{r, echo=FALSE, fig.height=4, fig.width=4}
+ggplot(data = data.frame(x, y), mapping = aes(x, y)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+
+Correlation is **sensitive to outliers**
+
+```{r, echo=FALSE, message=FALSE, fig.height=4, fig.width=8}
+library(gridExtra)
+p1 <- qplot(x3, y3, data = anscombe) +
+  xlab("x") + ylab("y") + scale_y_continuous(limits=c(5,13)) +
+  annotate("text", label = "r = 0.816", x = 6, y = 12, size = 6)
+
+p2 <- qplot(x3, y3, data = subset(anscombe, y3 < 9)) +
+  xlab("x") + ylab("y") + scale_y_continuous(limits=c(5,13)) +
+  annotate("text", label = "r = 0.999", x = 6, y = 12, size = 6)
+
+grid.arrange(p1, p2, nrow = 1)
+```
+

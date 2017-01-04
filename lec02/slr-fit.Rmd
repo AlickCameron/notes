@@ -1,5 +1,5 @@
 ---
-title: "Simple Linear Regression"
+title: "Exploring Bivariate Relationships"
 author: "Prof. Adam Loy"
 date: "Math 430, Winter 2017"
 output:
@@ -13,9 +13,8 @@ output:
     fig_width: 3
 ---
 
-
 ```{r setup, include=FALSE}
-mpg <- read.csv(file = "https://github.com/math430-lu/data/raw/master/mpg.csv", as.is = TRUE)
+mpg <- read.csv(file = "https://github.com/math430-lu/data/raw/master/mpg.csv")
 library(ggplot2)
 ```
 
@@ -52,12 +51,12 @@ $n =$ sample size
 ## EDA: Scatterplots
 
 ```{r, eval=FALSE}
-qplot(x = Weight, y = MPG, data = mpg)
+qplot(x = weight, y = mpg, data = mpg)
 ```
 
 <div class="columns-2">
 ```{r, echo=FALSE}
-qplot(x = Weight, y = MPG, data = mpg)
+qplot(x = weight, y = mpg, data = mpg)
 ```
 
 
@@ -80,7 +79,7 @@ $$Corr(X, Y) = r = \dfrac{1}{n-1} \sum_{i = 1}^n \left( \dfrac{x_i - \overline{x
 
 ### R code:
 ```{r}
-cor(mpg$Weight, mpg$MPG)
+cor(mpg$weight, mpg$mpg)
 ```
 
 ## Caution  {.columns-2}
@@ -121,7 +120,7 @@ grid.arrange(p1, p2, nrow = 1)
 
 <div class="columns-2">
 ```{r, echo=FALSE}
-qplot(x = Weight, y = MPG, data = mpg)
+qplot(x = weight, y = mpg, data = mpg)
 ```
 
 <br>
@@ -133,160 +132,160 @@ $y_i = f(x_i) + \varepsilon_i$
 What is a good model for the fuel economy data?
 </div>
 
-# Simple Linear Regression (SLR)
+<!-- # Simple Linear Regression (SLR) -->
 
-## Simple Linear Regression Model
+<!-- ## Simple Linear Regression Model -->
 
-$y_i = \beta_0 + \beta_1 x_i + \varepsilon_i$
+<!-- $y_i = \beta_0 + \beta_1 x_i + \varepsilon_i$ -->
 
-$\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_\varepsilon)$
+<!-- $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_\varepsilon)$ -->
 
-which is equivalent to
+<!-- which is equivalent to -->
 
-$y_i \overset{\text{iid}}{\sim} \mathcal{N}(\beta_0 + \beta_1 x_i, \sigma_\varepsilon)$
+<!-- $y_i \overset{\text{iid}}{\sim} \mathcal{N}(\beta_0 + \beta_1 x_i, \sigma_\varepsilon)$ -->
 
-## Simple Linear Regression Model
+<!-- ## Simple Linear Regression Model -->
 
-![](figs/slr.png)
+<!-- ![](figs/slr.png) -->
 
-## Simple Linear Regression Model
-
-
-### Interpretations
-
-</br>
-
-$\beta_0$
-
-</br>
-</br>
-
-$\beta_1$
-
-</br>
-</br>
-
-$\sigma_\varepsilon$
+<!-- ## Simple Linear Regression Model -->
 
 
-## Simple Linear Regression Model
+<!-- ### Interpretations -->
 
-### Assumptions
+<!-- </br> -->
 
-1. Linearity
-2. Zero mean
-3. Constant error variance
-4. Independence
-5. Random
-6. Normality of error terms
+<!-- $\beta_0$ -->
 
-## Fitting the SLR Model
+<!-- </br> -->
+<!-- </br> -->
 
-### **Model**
-$y_i \overset{\text{iid}}{\sim} \mathcal{N}(\beta_0 + \beta_1 x_i, \sigma_\varepsilon)$
+<!-- $\beta_1$ -->
 
-### **Problem**
-We need values for $\beta_0$, $\beta_1$, and $\sigma_\varepsilon$!!
+<!-- </br> -->
+<!-- </br> -->
 
-### **Solution**
-- Least squares estimation
-- Maximum likelihood estimation (details in Math 445)
-- Bayesian estimation (take Math 445)
+<!-- $\sigma_\varepsilon$ -->
 
 
-## Least Squares Estimation
+<!-- ## Simple Linear Regression Model -->
 
-### **Target**
+<!-- ### Assumptions -->
 
-The "best" estimates of $\beta_0$ and $\beta_1$
+<!-- 1. Linearity -->
+<!-- 2. Zero mean -->
+<!-- 3. Constant error variance -->
+<!-- 4. Independence -->
+<!-- 5. Random -->
+<!-- 6. Normality of error terms -->
 
-### **Procedure**
+<!-- ## Fitting the SLR Model -->
 
-Find the $\widehat{\beta}_0$ and $\widehat{\beta}_1$ that minimizes 
+<!-- ### **Model** -->
+<!-- $y_i \overset{\text{iid}}{\sim} \mathcal{N}(\beta_0 + \beta_1 x_i, \sigma_\varepsilon)$ -->
 
-$$\sum_{i=1}^n \left(y_i - \widehat{\beta}_0 - \widehat{\beta}_1 x_i \right)^2$$
+<!-- ### **Problem** -->
+<!-- We need values for $\beta_0$, $\beta_1$, and $\sigma_\varepsilon$!! -->
 
-## Least Squares Estimation
-
-### Intuition
-```{r, echo=FALSE}
-mod <- lm(MPG ~ Weight, data = mpg)
-fit <- fitted(mod)
-
-ls.df <- data.frame(y.hat = as.numeric(fit), y = mpg$MPG, x = mpg$Weight)
-ls.df$ymin <- as.numeric(apply(ls.df, 1, FUN = function(x) min(x["y.hat"], x["y"])))
-ls.df$ymax <- as.numeric(apply(ls.df, 1, FUN = function(x) max(x["y.hat"], x["y"])))
-
-
-ggplot(data = mpg, aes(x = Weight, y = MPG)) +  
-    geom_linerange(aes(ymin = ymin, ymax = ymax, x = x), data = ls.df, inherit.aes = FALSE, colour = I("gray60")) +
-  geom_point() + 
-  geom_smooth(method = "lm", se = FALSE)
-```
+<!-- ### **Solution** -->
+<!-- - Least squares estimation -->
+<!-- - Maximum likelihood estimation (details in Math 445) -->
+<!-- - Bayesian estimation (take Math 445) -->
 
 
+<!-- ## Least Squares Estimation -->
 
-## Least Squares Estimation
+<!-- ### **Target** -->
 
-### **Solution**
+<!-- The "best" estimates of $\beta_0$ and $\beta_1$ -->
 
-$$\begin{align}
-\widehat{\beta}_0 &= \overline{y} - \widehat{\beta}_1 \overline{x}\\
-\widehat{\beta}_1 &= \dfrac{\displaystyle \sum_{i=1}^n \left(y_i - \overline{y} \right) \left(x_i - \overline{x} \right)}{\displaystyle \sum_{i=1}^n \left(x_i - \overline{x} \right)^2}\\
-  &= r \dfrac{s_y}{s_x}
-\end{align}$$
+<!-- ### **Procedure** -->
 
-**Note**: We do not get an estimate of $\sigma_\varepsilon$ using least squares.
+<!-- Find the $\widehat{\beta}_0$ and $\widehat{\beta}_1$ that minimizes  -->
 
+<!-- $$\sum_{i=1}^n \left(y_i - \widehat{\beta}_0 - \widehat{\beta}_1 x_i \right)^2$$ -->
 
-## Regression (Residual) Standard Error
+<!-- ## Least Squares Estimation -->
 
-To obtain an estimate of $\sigma_\varepsilon$, we use the sum of the squared errors
+<!-- ### Intuition -->
+<!-- ```{r, echo=FALSE} -->
+<!-- mod <- lm(MPG ~ Weight, data = mpg) -->
+<!-- fit <- fitted(mod) -->
 
-$$\widehat{\sigma}_\varepsilon = \sqrt{\displaystyle \dfrac{\sum_{i=1}^n (y_i - \widehat{y}_i)^2}{n - 2}} = \sqrt{\dfrac{\text{SSE}}{n-2}}$$
-
-## Properties of the Estimators
-
-- $\widehat{\beta}_0$ and $\widehat{\beta}_1$ are **unbiased estimates** of $\beta_0$ and $\beta_1$
-<br>
-<br>
-<br>
-- $\widehat{\beta}_0$ and $\widehat{\beta}_1$ are the *best linear unbiased estimates* (BLUE); that is, they have the smallest variance of all linear unbiased estimates
-<br>
-<br>
-<br>
-- $\widehat{\sigma}_\varepsilon$ is an unbiased estimate of $\sigma_\varepsilon$
-
-## Fitting SLR Models in R {.smaller}
+<!-- ls.df <- data.frame(y.hat = as.numeric(fit), y = mpg$MPG, x = mpg$Weight) -->
+<!-- ls.df$ymin <- as.numeric(apply(ls.df, 1, FUN = function(x) min(x["y.hat"], x["y"]))) -->
+<!-- ls.df$ymax <- as.numeric(apply(ls.df, 1, FUN = function(x) max(x["y.hat"], x["y"]))) -->
 
 
-```{r}
-mod <- lm(MPG ~ Weight, data = mpg)
-summary(mod)
-```
-
-## Using the Model for Prediction
-
-How would we use the model to predict the MPG for a car weighing 2,500 lbs?
-
-<br>
-<br>
-<br>
-
-How do we interpret this number?
+<!-- ggplot(data = mpg, aes(x = Weight, y = MPG)) +   -->
+<!--     geom_linerange(aes(ymin = ymin, ymax = ymax, x = x), data = ls.df, inherit.aes = FALSE, colour = I("gray60")) + -->
+<!--   geom_point() +  -->
+<!--   geom_smooth(method = "lm", se = FALSE) -->
+<!-- ``` -->
 
 
-## Using the Model for Prediction
 
-How would we use the model to predict the MPG for a semi weighing 20,000 lbs? 
-Does this prediction make sense?
+<!-- ## Least Squares Estimation -->
+
+<!-- ### **Solution** -->
+
+<!-- $$\begin{align} -->
+<!-- \widehat{\beta}_0 &= \overline{y} - \widehat{\beta}_1 \overline{x}\\ -->
+<!-- \widehat{\beta}_1 &= \dfrac{\displaystyle \sum_{i=1}^n \left(y_i - \overline{y} \right) \left(x_i - \overline{x} \right)}{\displaystyle \sum_{i=1}^n \left(x_i - \overline{x} \right)^2}\\ -->
+<!--   &= r \dfrac{s_y}{s_x} -->
+<!-- \end{align}$$ -->
+
+<!-- **Note**: We do not get an estimate of $\sigma_\varepsilon$ using least squares. -->
 
 
-## Prediction in R
+<!-- ## Regression (Residual) Standard Error -->
+
+<!-- To obtain an estimate of $\sigma_\varepsilon$, we use the sum of the squared errors -->
+
+<!-- $$\widehat{\sigma}_\varepsilon = \sqrt{\displaystyle \dfrac{\sum_{i=1}^n (y_i - \widehat{y}_i)^2}{n - 2}} = \sqrt{\dfrac{\text{SSE}}{n-2}}$$ -->
+
+<!-- ## Properties of the Estimators -->
+
+<!-- - $\widehat{\beta}_0$ and $\widehat{\beta}_1$ are **unbiased estimates** of $\beta_0$ and $\beta_1$ -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- - $\widehat{\beta}_0$ and $\widehat{\beta}_1$ are the *best linear unbiased estimates* (BLUE); that is, they have the smallest variance of all linear unbiased estimates -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- <br> -->
+<!-- - $\widehat{\sigma}_\varepsilon$ is an unbiased estimate of $\sigma_\varepsilon$ -->
+
+<!-- ## Fitting SLR Models in R {.smaller} -->
 
 
-```{r}
-mod <- lm(MPG ~ Weight, data = mpg)
-predict(mod, newdata = data.frame(Weight = 2500))
-predict(mod, newdata = data.frame(Weight = 20000))
-```
+<!-- ```{r} -->
+<!-- mod <- lm(MPG ~ Weight, data = mpg) -->
+<!-- summary(mod) -->
+<!-- ``` -->
+
+<!-- ## Using the Model for Prediction -->
+
+<!-- How would we use the model to predict the MPG for a car weighing 2,500 lbs? -->
+
+<!-- <br> -->
+<!-- <br> -->
+<!-- <br> -->
+
+<!-- How do we interpret this number? -->
+
+
+<!-- ## Using the Model for Prediction -->
+
+<!-- How would we use the model to predict the MPG for a semi weighing 20,000 lbs?  -->
+<!-- Does this prediction make sense? -->
+
+
+<!-- ## Prediction in R -->
+
+
+<!-- ```{r} -->
+<!-- mod <- lm(MPG ~ Weight, data = mpg) -->
+<!-- predict(mod, newdata = data.frame(Weight = 2500)) -->
+<!-- predict(mod, newdata = data.frame(Weight = 20000)) -->
+<!-- ``` -->
