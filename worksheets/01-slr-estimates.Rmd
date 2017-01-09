@@ -56,34 +56,50 @@ In order to **fit** the SLR model, we must choose values for $b_0$ and $b_1$, wh
 
 The **residual sums of squares** are defined as
 
-$$RSS = \sum_{i=1}^n \left( y_i - \widehat{y}_i \right)^2 = \sum_{i=1}^n \left( y_i - (b_0 + b_1 x_i) \right)^2$$ 
+$$RSS = \sum_{i=1}^n \left( y_i - \widehat{y}_i \right)^2 = \sum_{i=1}^n \left( y_i - b_0 - b_1 x_i \right)^2$$ 
+
+\clearpage
 
 #### Step 2: Remember your calculus
 
 We wish to minimize the RSS with respect to both $b_0$ and $b_1$. Find the necessary partial derivatives and set them equal to 0.
 
-$\frac{\partial}{\partial b_0} RSS =$
+\vspace{2cm}
 
-$\frac{\partial}{\partial b_1} RSS =$
+$\dfrac{\partial}{\partial b_0} RSS =$ 
 
+\vspace{2cm}
+
+$\dfrac{\partial}{\partial b_1} RSS =$
+
+\vspace{2cm}
 
 #### Step 3: Remember your (high school) algebra
 
-We now have a two equation, two unknown problem. Rearrange the above equations, simplyfing sums when possible:
+We now have a two equation, two unknown problem. Rearrange the above equations, simplifying sums when possible:
+
+\vspace{1cm}
 
 $\displaystyle \sum_{i=1}^n y_i =$
 
+\vspace{2cm}
+
 $\displaystyle \sum_{i=1}^n x_i y_i =$
 
+\vspace{2cm}
+
 The above equations are called the **normal equations**.
+
+
+\clearpage
 
 #### Step 4: Solve for $b_0$ and $b_1$
 
 Solving the normal equations for $b_0$ and $b_1$ yield the **least squares (LS) estimates**. The LS estimates are so commonly used that we require special notation to separate them from other possible estimates. Statisticians, being the clever folks they are, place a $\widehat{\phantom{y}}$ (a "hat") over the $\beta_i$'s to denote they are LS estimates. 
 
+\vspace{10cm}
 
-$\widehat{\beta}_0 =$
+$\widehat{\beta}_0 = \hspace{8cm} \widehat{\beta}_1 =$
 
-$\widehat{\beta}_1 =$
-
+\vspace{1cm}
 Luckily, R makes fitting an SLR model via least squares very simply, so we won't need to manually crunch any numbers to find our LS estimates, but it is important to understand the model fitting process so that we don't treat anything as a "black box."

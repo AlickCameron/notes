@@ -146,25 +146,36 @@ $(document).ready(function () {
 <h4>Step 1: Write down the objective function</h4>
 <p>The <strong>residual sums of squares</strong> are defined as</p>
 <p><span class="math display">\[RSS = \sum_{i=1}^n \left( y_i - \widehat{y}_i \right)^2 = \sum_{i=1}^n \left( y_i - (b_0 + b_1 x_i) \right)^2\]</span></p>
+<p></p>
 </div>
 <div id="step-2-remember-your-calculus" class="section level4">
 <h4>Step 2: Remember your calculus</h4>
 <p>We wish to minimize the RSS with respect to both <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span>. Find the necessary partial derivatives and set them equal to 0.</p>
-<p><span class="math inline">\(\frac{\partial}{\partial b_0} RSS =\)</span></p>
-<p><span class="math inline">\(\frac{\partial}{\partial b_1} RSS =\)</span></p>
+
+<p><span class="math inline">\(\dfrac{\partial}{\partial b_0} RSS =\)</span></p>
+
+<p><span class="math inline">\(\dfrac{\partial}{\partial b_1} RSS =\)</span></p>
+
 </div>
 <div id="step-3-remember-your-high-school-algebra" class="section level4">
 <h4>Step 3: Remember your (high school) algebra</h4>
 <p>We now have a two equation, two unknown problem. Rearrange the above equations, simplyfing sums when possible:</p>
+
 <p><span class="math inline">\(\displaystyle \sum_{i=1}^n y_i =\)</span></p>
+
 <p><span class="math inline">\(\displaystyle \sum_{i=1}^n x_i y_i =\)</span></p>
+
 <p>The above equations are called the <strong>normal equations</strong>.</p>
+<p></p>
 </div>
 <div id="step-4-solve-for-b_0-and-b_1" class="section level4">
 <h4>Step 4: Solve for <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span></h4>
 <p>Solving the normal equations for <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span> yield the <strong>least squares (LS) estimates</strong>. The LS estimates are so commonly used that we require special notation to separate them from other possible estimates. Statisticians, being the clever folks they are, place a <span class="math inline">\(\widehat{\phantom{y}}\)</span> (a “hat”) over the <span class="math inline">\(\beta_i\)</span>’s to denote they are LS estimates.</p>
+
 <p><span class="math inline">\(\widehat{\beta}_0 =\)</span></p>
+
 <p><span class="math inline">\(\widehat{\beta}_1 =\)</span></p>
+
 <p>Luckily, R makes fitting an SLR model via least squares very simply, so we won’t need to manually crunch any numbers to find our LS estimates, but it is important to understand the model fitting process so that we don’t treat anything as a “black box.”</p>
 </div>
 </div>
