@@ -1,0 +1,129 @@
+---
+title: 'Lab 1: Simple linear regression in R'
+author: "Math 430, Winter 2017"
+output:
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+## 0. Intro
+
+### 0.1 Setup
+The r markdown template for this lab is available on the course webpage (right click and download the file).
+
+We will use the `ggplot2` package for plotting during this lab. Make sure that you have installed it before running the command
+
+```{r message=FALSE}
+library(ggplot2)
+```
+
+### 0.2 R markdown
+
+####  Text
+
+Text can be decorated with **bold** or *italics*.  It is also possible to 
+
+
+* I am
+* making a bulleted
+* list
+* create [links](http://rmarkdown.rstudio.com/) 
+* include mathematics like $e=mc^2$ or 
+
+$$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2$$
+
+- dashes
+- also
+- work
+
+Be sure to put a space after the * when you are creating bullets and a space after # when 
+creating section headers, but **not** between $ and the mathematical formulas.
+
+#### Using RMarkdown for Mathematical Expressions
+
+Let's practice typing some common equations used in statistical models. If you know LaTeX, you can type equations as you typically would. If you don't know LaTeX, here's a crash course.
+
+1. Theoretical model 1:
+
+2. Theoretical model 2:
+
+3. Fitted LS equation:
+
+4. Sample mean:
+
+5. Sample variance:
+
+6. Test statistic for slope:
+
+7. CI for slope:
+
+### Graphics
+
+If the code of an R chunk produces a plot, this plot can be displayed in the resulting file.
+```{r}
+ggplot(data = cars, mapping = aes(x = speed, y = dist)) +
+  geom_point() +
+  labs(x = "Speed (mph)", y = "Stopping distance (ft)")
+```
+
+### R output
+Other forms of R output are also displayed as they are produced.
+```{r}
+summary(cars)
+```
+
+### Destination formats
+
+This file can be knit to HTML, PDF, or Word.  In R Studio, just select the desired output file type and click on `Knit HTML`, `Knit PDF`, or `Knit Word`.  Use the drop-down menu next to that to change the desired file type.
+
+## 1. The data
+
+How much is an extra square foot of space worth? In this lab, we investigate this question for homes in Saratoga County, New York. The data set contains the prices of 1,728 homes. To begin we must load the data set.
+
+```{r}
+saratoga <- read.csv("https://github.com/math430-lu/data/raw/master/saratoga.csv")
+```
+
+### 1.1. Exploring the data
+
+Before jumping into a regression analysis, it's a good idea to plot the variables involved to determine whether there is linear relationship between them.
+
+**Question 1.** Create a scatterplot of price vs. living area and describe the relationship. (Look at the column names carefully before trying to create this plot!)
+
+In addition to exploratory plots, we can quantify the strength and direction of the linear association between the price and living area using the correlation. To calculate the correlation in R we use the `cor` command. 
+
+**Question 2.** Calculate the correlation between price and living area. 
+
+
+## 2. Fitting a simple linear regression model in R
+
+Having verified that a linear relationship is plausible between price and living area, we fit a regression model to further explore this relationship. In R, we use the `lm` function to fit a simple linear regression. The basic syntax follows the same pattern as before: `lm(y ~ x, data = data_frame)` where `y` is the response variable and `x` is the explanatory variable. 
+
+**Question 3.** Fit the regression model using living area to predict the price of a home.
+
+**Question 4.** Overlay the fitted regression line on the scatterplot of price vs. living area.
+
+**Question 5.** Report the fitted least squares regression equation.
+
+**Question 6.** Interpret the estimate of the slope within the context of the problem.
+
+**Question 7.** Interpret the estimate of the y-intercept within the context of the problem. Does this interpretation make sense in this context?
+
+
+## 3. Inference for the slope
+
+Up to this point we have simply described what our simple linear regression model reveals about the 1,728 houses contained in our sample; however, if we drew a new sample from the population it may give a different fitted least squares regression equation. In order to draw inferences about this linear relationship back to the population of all houses in Saratoga County, New York we must either construct confidence intervals for the slope and/or intercept (also called regression coefficients), or we must run hypothesis tests.
+
+
+**Question 8.** Create a 95% confidence interval for the slope. Interpret this confidence interval within the context of the problem.
+
+**Question 9.** Carry out a hypothesis testing whether the slope = 0. Report your p-value and a short conclusion.
+
+**Question 10.** Do the results of your confidence interval and hypothesis test agree?

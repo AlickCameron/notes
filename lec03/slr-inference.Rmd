@@ -1,0 +1,390 @@
+---
+title: "Inference for Regression Coefficients"
+author: "Math 430, Winter 2017"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(ggplot2)
+```
+
+# Climate data
+
+- Measurements on CO$_2$ in the atmosphere and global temperature anomaly (deviation from the mean temperature from 1961 to 1990)
+
+```{r}
+climate <- read.csv("https://github.com/math430-lu/data/raw/master/climate.csv")
+head(climate)
+```
+
+
+- Goals 
+    + understand the relationship between CO$_2$ and global temperatures
+    
+    + make predictions
+    
+---
+
+# Climate data
+
+```{r fig.height=5, fig.width=5}
+ggplot(data = climate, mapping = aes(x = co2, y = globaltemp)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE)
+```
+
+
+---
+
+# Fitting the SLR model
+
+```{r size="scriptsize"}
+climate.lm <- lm(globaltemp ~ co2, data = climate)
+summary(climate.lm)
+```
+
+---
+class: middle, center
+
+# Inference for the slope
+
+---
+
+# Statistical inference
+
+**Goal:** use statistics calculated from data to makes inferences about the nature of parameters.
+
+- Statistics: $\widehat{\beta}_0$, $\widehat{\beta}_1$
+
+- Parameters: $\beta_0$, $\beta_1$
+
+
+**Tools:**
+
+- Confidence intervals
+ 
+- Hypothesis tests
+
+
+---
+
+# Overview of statistical inference
+
+---
+
+# Confidence intervals
+
+**Idea**: A confidence interval expresses the amount of uncertainly we have in our estimate of a particular parameter. 
+
+To find such a range of plausible values for the parameter of interest, $\theta$, so that we know the long-run properties of the intervals.
+
+$$P(\widehat{\theta}_L < \theta < \widehat{\theta}_U) = 1 - \alpha$$
+
+- The endpoints are random variables **before** observing the data
+
+- $\theta$ is fixed but unknown
+
+---
+
+# Confidence intervals
+
+A general $1 - \alpha$ confidence interval takes the form
+
+$$\widehat{\theta} \pm t^* \cdot SE(\widehat{\theta})$$
+
+- $\alpha$: the confidence level
+
+- $\widehat{\theta}$: a statistic (i.e. point estimate)
+
+- $t^*$: the $1-\alpha/2$ quantile of a reference distribution
+
+- $SE(\widehat{\theta})$: the standard error of $\widehat{\theta}$; i.e. the standard deviation of the sampling distribution
+
+---
+
+# Sampling distribution of the slope
+
+Assume that the true model is
+
+$$E(Y|X=x) = 12 + .7x, \quad e \sim \mathcal{N}(0, 4)$$
+```{r, echo=FALSE,eval=TRUE, fig.width=5, fig.height=5}
+n <- 60
+beta_0 <- 12
+beta_1 <- .7
+sigma <- 2
+x <- rnorm(n, mean = 20, sd = 3)
+
+plot(20, 25, xlim = c(12, 28), ylim = c(17, 35), ylab = "y", xlab = "x", type = "n") # set up an empty plot
+abline(a = beta_0, b = beta_1, col = "orange", lwd = 2) # add mean function
+```
+
+```{r eval = FALSE, echo = FALSE}
+# generate data
+f_mean <- beta_0 + beta_1 * x # mean function
+f_data <- f_mean + rnorm(n, mean = 0, sd = sigma) # data generating function
+
+points(x, f_data, pch = 16, col = "steelblue") # add generated data
+
+# try to recover the true mean function
+m1 <- lm(f_data ~ x)
+m1
+abline(m1)
+```
+
+---
+
+# Sampling distribution of the slope
+
+```{r, echo=FALSE,eval=TRUE, cache=TRUE}
+it <- 5000
+coef_mat <- matrix(rep(NA, it * 2), ncol = 2)
+for(i in 1:it) {
+  x <- rnorm(n, mean = 20, sd = 3)
+  f_mean <- beta_0 + beta_1 * x
+  f_data <- f_mean + rnorm(n, mean = 0, sd = sigma)
+  coef_mat[i, ] <- lm(f_data ~ x)$coef
+}
+```
+
+```{r, eval=TRUE, echo=FALSE, fig.height=7, fig.width=7}
+plot(20, 25, xlim = c(12, 28), ylim = c(17, 35), ylab = "y", xlab = "x", type = "n") # set up an empty plot
+
+points(x, f_data, pch = 16, col = "steelblue") # add generated data
+for(i in 1:it) {
+  abline(coef_mat[i, 1], coef_mat[i, 2], col = rgb(0, 0, 0, 0.02))
+}
+abline(a = beta_0, b = beta_1, col = "orange", lwd = 2) # add mean function
+```
+
+---
+
+# Sampling distribution of the slope
+
+```{r, echo=FALSE, fig.height=7, fig.width=14}
+beta_1s <- coef_mat[, 2]
+hist(beta_1s, breaks = 20, 
+     main = expression(paste("Sampling distribution of ", hat(beta)[1])),
+     xlab = expression(hat(beta)[1]), prob = TRUE)
+# mean(beta_1s)
+# sd(beta_1s)
+```
+
+---
+
+# Sampling distribution of the slope
+
+```{r, echo=FALSE, fig.height=7, fig.width=14}
+beta_1s <- coef_mat[, 2]
+hist(beta_1s, breaks = 20, 
+     main = expression(paste("Sampling distribution of ", hat(beta)[1])),
+     xlab = expression(hat(beta)[1]), prob = TRUE)
+abline(v = beta_1, col = "orange", lwd = 2)
+text(beta_1+.02, .5, expression(beta[1]))
+```
+
+---
+
+# Sampling distribution of the slope
+
+```{r, echo=FALSE, fig.height=7, fig.width=14}
+beta_1s <- coef_mat[, 2]
+hist(beta_1s, breaks = 20, 
+     main = expression(paste("Sampling distribution of ", hat(beta)[1])),
+     xlab = expression(hat(beta)[1]), prob = TRUE)
+abline(v = beta_1, col = "orange", lwd = 2)
+text(beta_1+.02, .5, expression(beta[1]))
+xl <- seq(min(beta_1s), max(beta_1s), length.out = 100)
+lines(xl, dnorm(xl, mean = beta_1, sd = sqrt(sigma^2/sum((x-mean(x))^2))), 
+      lwd = 2, col = "darkorange")
+```
+
+---
+
+# Properties
+
+1. $E(\widehat{\beta}_1 | X) = \beta_1$
+
+1. $Var(\widehat{\beta}_1| X) = \dfrac{\sigma^2}{SXX}$
+
+1. $\widehat{\beta}_1| X \sim \mathcal{N}\left(\beta_1,  \dfrac{\sigma^2}{SXX}\right)$
+
+---
+
+# Approximating the sampling distribution
+
+We don't know $\sigma^2$, so we have to plug in our best guess at it's value, $S^2 = RSS/(n-2)$.
+
+- The distribution is no longer normal due to the added uncertainty (heavier tails)
+
+- Use the $t$ distribution with $n-2$ degrees of freedom (d.f.)
+
+- Use R to find the quantiles
+
+```{r eval=FALSE}
+qt(1 - alpha/2, df = n-2)
+```
+
+
+---
+
+# CI for the slope
+
+$$\widehat{\beta}_1 \pm t^*_{\alpha/2, n-2} \dfrac{S}{\sqrt{SXX}}$$
+
+---
+class: middle
+
+```{r}
+summary(climate.lm)
+```
+
+---
+
+# An easier way in R
+
+```{r}
+confint(climate.lm, level = 0.95)
+```
+
+---
+
+# Interpreting CIs
+
+We are 95% confident that the true slope between x and y lies between LB and UB.
+
+
+For our climate example:
+
+---
+
+# Hypothesis testing framework
+
+1. Formulate two competing hypotheses: $H_0$ and $H_A$.
+
+1. Choose a test statistic that characterizes the information in the
+sample relevant to $H_0$.
+
+1. Determine the sampling distribution of the chosen statistic when $H_0$
+is true.
+
+1. Compare the calculated test statistic to the sampling distribution to determine whether it is "extreme."
+
+---
+
+# Tests for the slope
+
+**Competing Claims:** $H_0: \beta_1 = \beta_1^0$ vs. $H_a: \beta_1 \ne \beta_1^0$
+
+(R assumes that $\beta_1^0 = 0$)
+
+<br>
+<br>
+
+**Test statistic:** $T = \dfrac{\widehat{\beta}_1 - \beta_1^0}{SE(\widehat{\beta}_1)}$
+<br>
+<br>
+
+**Reference distribution**: $T \sim t_{n-2}$when $H_0$ is true
+
+<br>
+<br>
+
+---
+
+# In R
+
+```{r}
+summary(climate.lm)
+```
+
+---
+
+# p-values
+
+---
+class: middle, center
+
+# Inference for the intercept
+
+---
+
+# Sampling distribution of the intercept
+
+$\widehat{\beta}_0 | X \sim \mathcal{N} \left(\beta_0,\  \sigma^2 \left( \dfrac{1}{n} + \dfrac{\overline{x}^2}{SXX} \right) \right)$
+
+Again, we can only estimate $\sigma^2$ using $S^2 = RSS/(n-2)$
+
+
+
+---
+
+# Inference for the intercept
+
+**Test statistic:** 
+
+$T = \dfrac{\widehat{\beta}_0 - \beta_0^0}{se(\widehat{\beta}_0)}$, where $se(\widehat{\beta}_0) = S \sqrt{\dfrac{1}{n} + \dfrac{\overline{x}^2}{SXX}}$
+<br>
+<br>
+
+**$(1-\alpha)100$% CI:**
+
+$$\widehat{\beta}_0 \pm t^*_{\alpha/2, n-2} \cdot se(\widehat{\beta}_0)$$
+
+---
+
+# Centered SLR Model
+
+**Issue:** $\beta_0$ is usually not interpretable
+
+**Solution:** Center the predictor variable
+$$x_i^* = x_i - \overline{x}$$
+and fit the model
+$$E(Y_i | X ) = \beta_0^* + \beta_1^* x_i^*$$
+
+**Advantages:**
+
+- Intercept is now the average/predicted value of $y$ when $x_i = \overline{x}$
+
+- Slope and residual standard deviation stay the same
+
+---
+
+# Centering a variable in R
+
+
+```{r message=FALSE}
+library(dplyr)
+climate <- mutate(climate, co2.center = co2 - mean(co2))
+head(climate)
+```
+
+
+---
+
+# Inference for $\beta_0$ in Centered SLR Model
+
+**Test statistic:** 
+
+$t = \dfrac{\widehat{\beta}_0^* - \beta_0^*}{se(\widehat{\beta}_0^*)}$, where $se(\widehat{\beta}_0^*) = S / \sqrt{n}$
+
+<br>
+<br>
+
+**$(1-\alpha)100$% CI:**
+
+$$\widehat{\beta}_0^* \pm t^*_{\alpha/2,n-2} \cdot se(\widehat{\beta}_0^*)$$
+
+---
+
+# Centered SLR Model in R
+
+```{r}
+centered.lm <- lm(globaltemp ~ co2.center, data = climate)
+summary(centered.lm)
+```
