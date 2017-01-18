@@ -1,0 +1,349 @@
+---
+title: "Diagnostic tools"
+author: "Math 430, Winter 2017"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+---
+
+```{r include=FALSE}
+library(alr4)
+library(ggplot2)
+data(UBSprices)
+```
+
+
+# Union Bank of Switzerland (UBS) reports
+
+- Produces regular reports on prices & earnings in major cities throughout the world
+
+- Measures (in minutes of labor required for "typical" worker to purchase the commodity):
+    + prices of basic commodities (1 kg rice, 1 kg loaf of bread)
+    + price of a Big Mac at McDonald's
+
+- Data from 2003 (before recession) and 2009 (after recession) reports
+
+---
+
+# Some EDA results
+
+```{r fig.width=6, fig.height=5}
+qplot(x = bigmac2003, y = bigmac2009, data = UBSprices) + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+---
+
+# Fitting the SLR model
+
+```{r}
+bigmac.lm <- lm(bigmac2009 ~ bigmac2003, data = UBSprices)
+summary(bigmac.lm)
+```
+
+---
+
+# Review: SLR Model Assumptions
+
+1. Linearity
+
+2. Independence
+
+3. Constant error variance
+
+4. Normality
+
+---
+
+# Consequences of a violation
+
+- **Non-linearity**: estimates are biased/meaningless
+
+- **Non-independence**: estimates are unbiased (i.e. we fit the right line), but the SEs are a problem (typically too small)
+
+- **Non-constant error variance**: estimates are unbiased but SEs are wrong (and we don't know how wrong)
+
+- **Normality**: estimates are unbiased, SEs are correct BUT 
+    + confidence intervals are wrong for small sample sizes (we can't use t-distribution)
+    
+    + prediction intervals are wrong for all sample sizes
+
+---
+
+# Residuals
+
+**Definition**: $e_i = y_i - \widehat{y}_i$
+<br>
+<br>
+<br>
+<br>
+
+**Properties:**
+
+-  sum to zero (so, residuals can't be independent!)
+
+-  **uncorrelated** with $x$ and $\widehat{y}$
+
+- normally distributed, but variance is not constant
+$$e_i \sim \mathcal{N} \left(0, \sigma^2 \left[ 1 - \dfrac{1}{n} - \dfrac{(x_i - \overline{x})^2}{\sum (x_i - \overline{x})^2} \right] \right)$$
+
+---
+# Standardized residuals
+
+**Review:**
+
+If $X$ has mean $\mu$ and standard deviation $\sigma$, then $\dfrac{X-\mu}{\sigma}$ has mean 0 and standard deviation 1
+
+<br>
+
+**Standardized residuals**
+
+- Formula: $$r_i = \dfrac{e_i}{s \sqrt{1 - \dfrac{1}{n} - \dfrac{(x_i - \overline{x})^2}{\sum (x_i - \overline{x})^2}}}$$
+
+
+---
+
+# Residual Plots
+
+- Plot residuals vs. predicted values
+    + detect non-constant variance
+    + detect non-linearity
+    + detect outliers
+
+- Plot residuals vs. $x$
+    + in SLR, same as above
+
+- Plot residuals vs. other possible predictors
+    + detect important missing variable
+
+- Plot residuals vs. lagged residuals
+    + detect temporally correlated errors
+    + sort errors in time order, plot $e_i$ vs. $e_{i-1}$
+
+---
+    
+# Normal quantile-quantile (Q-Q) plots
+
+**Use**: detect non-normality
+
+<br>
+
+**Construction**:
+    
+- plots ordered residuals vs. quantiles from $\mathcal{N}(0,1)$
+    
+- if in agreement, points will fall on diagonal line
+    
+- best to use standardized residuals
+
+
+---
+    
+# Normal quantile-quantile (Q-Q) plots
+
+```{r echo=FALSE, message=FALSE, fig.height=7, fig.width=7}
+suppressWarnings(library(grid))
+library(ggExtra)
+
+set.seed(2122016)
+s <- rnorm(n = 50, mean = 21, sd = 5)
+linfo <- HLMdiag:::qqlineInfo(s)
+qqpoints <- as.data.frame(qqnorm(s, plot.it = FALSE))
+
+example1 <- ggplot(aes(x = qqpoints$x, y = qqpoints$y), data = qqpoints) + 
+  geom_abline(aes(intercept = linfo[1], slope = linfo[2]), colour = I("grey30")) + 
+  geom_point() + 
+  xlab("theoretical") + 
+  ylab("sample")
+
+ggMarginal(example1, type="histogram")
+```
+
+
+---
+    
+# Normal Q-Q plots
+
+```{r echo=FALSE, message=FALSE, fig.height=7, fig.width=7}
+set.seed(123)
+rs <- rgamma(100,1)
+ls <- rbeta(100,3,0.5)
+
+temp <- sort(rnorm(100))
+
+st <- c(temp[16:85], rnorm(30,0,0.1))
+lt <- c(temp[1:20]-rgamma(20,1), temp[21:80], temp[81:100]+rev(rgamma(20,1)))
+
+example_right_skew <- ggplot(aes(x = x, y = y), data = as.data.frame(qqnorm(rs, plot.it = FALSE))) + 
+  geom_abline(aes(intercept = HLMdiag:::qqlineInfo(rs)[1], slope = HLMdiag:::qqlineInfo(rs)[2]), colour = I("grey30")) + 
+  geom_point() + 
+  xlab("theoretical") + 
+  ylab("sample")
+ggMarginal(example_right_skew, type="histogram")
+
+```
+
+
+---
+    
+# Normal Q-Q plots
+
+```{r echo=FALSE, message=FALSE, fig.height=7, fig.width=7}
+example_left_skew <- ggplot(aes(x = x, y = y), data = as.data.frame(qqnorm(ls, plot.it = FALSE))) + 
+  geom_abline(aes(intercept = HLMdiag:::qqlineInfo(ls)[1], slope = HLMdiag:::qqlineInfo(ls)[2]), colour = I("grey30")) + 
+  geom_point() + 
+  xlab("theoretical") + 
+  ylab("sample")
+ggMarginal(example_left_skew, type="histogram")
+
+```
+
+
+---
+    
+# Normal Q-Q plots
+
+
+```{r echo=FALSE, message=FALSE, fig.height=7, fig.width=7}
+example_heavy_tail <- ggplot(aes(x = x, y = y), data = as.data.frame(qqnorm(lt, plot.it = FALSE))) + 
+  geom_abline(aes(intercept = HLMdiag:::qqlineInfo(lt)[1], slope = HLMdiag:::qqlineInfo(lt)[2]), colour = I("grey30")) + 
+  geom_point() + 
+  xlab("theoretical") + 
+  ylab("sample")
+ggMarginal(example_heavy_tail, type="histogram")
+
+```
+
+
+
+---
+
+# Calibrating Our Perception
+
+
+- https://gallery.shinyapps.io/slr_diag/
+
+- App simulates residual plots under different models
+
+---
+
+# UBS Residual Plots
+
+```{r include=FALSE}
+library(car)
+```
+
+
+```{r, eval=FALSE}
+library(car) ## workhorse for residual plots
+residualPlot(bigmac.lm, pch = 16, type = "rstandard")
+plot(bigmac.lm, which = 2, pch = 16)
+```
+
+.pull-left[
+```{r echo=FALSE, fig.width=5, fig.height=5}
+residualPlot(bigmac.lm, pch = 16, type = "rstandard")
+```
+]
+
+.pull-right[
+```{r echo=FALSE, fig.width=5, fig.height=5}
+plot(bigmac.lm, which = 3, pch = 16)
+```
+]
+
+
+---
+
+# UBS Residual Plots
+
+```{r fig.width=6, fig.height=6}
+plot(bigmac.lm, which = 2, pch = 16)
+```
+
+
+---
+
+# Outliers and influential points
+
+**Why we worry**
+
+$\widehat{\beta}_1 = r \cdot \dfrac{s_y}{s_x}$
+
+<br>
+
+**Methods:**
+
+1. **Graphical displays**: scatterplot, residual plot, boxplot of residuals, histogram of residuals
+<br>
+<br>
+
+2. **Measures of influence**: leverage, Cook's distance
+
+---
+
+# Leverage
+
+- **Idea**: Points farther from $\overline{x}$ have greater potential to influence the slope
+
+- **Metric**: Leverage
+$$h_i = \dfrac{1}{n} + \frac{\left(x_i - \overline{x}\right)^2}{\displaystyle\sum_{j=1}^n \left(x_j - \overline{x}\right)^2}$$
+- $\sum h_i = 2$ for SLR, so "typical" leverage is about $2/n$
+
+- red flag if $h_i > 4/n$
+
+- **Caution:** leverage only refers to $x$ coordinate, does not take into account the $y$ coordinate
+
+
+---
+
+# UBS Leverage
+
+```{r}
+bigmac.lev <- hatvalues(bigmac.lm)
+which(bigmac.lev > 4/nrow(BigMac2003))
+which(bigmac.lev > 6/nrow(BigMac2003))
+```
+
+
+---
+
+# UBS Leverage
+
+```{r fig.width=5, fig.height=5}
+plot(bigmac.lm, which = 5, pch = 16)
+```
+
+---
+
+# Cook's distance
+
+Measures amount of influence observation has on the estimated regression equation
+
+$$D_i= \frac{\displaystyle\sum_{j=1}^n \left( \widehat{y}_{j(i)} - \widehat{y}_j \right)^2}{2 s^2} = \dfrac{r_i}{2} \cdot \dfrac{h_{ii}}{1 - h_{ii}}$$
+
+* Rule of thumb: Investigate points with $D_i > 4/(n-2)$
+
+* Better idea: look for gaps in a plot of $D_i$
+
+---
+
+# UBS Cook's Distance
+
+```{r fig.width=5, fig.height=5}
+bigmac.cooksd <- cooks.distance(bigmac.lm)
+head(bigmac.cooksd, 5)
+plot(bigmac.lm, which = 4, pch = 16)
+```
+
+---
+
+# What do we do if our assumptions are violated?
+
+1. Change your assumptions (harder, need more theory)
+
+2. Transform $y$, $x$, or both
+

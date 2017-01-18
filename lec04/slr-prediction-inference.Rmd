@@ -1,0 +1,108 @@
+---
+title: "Inference for Predictions"
+author: "Math 430, Winter 2017"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(ggplot2)
+climate <- read.csv("https://github.com/math430-lu/data/raw/master/climate.csv")
+```
+
+# Recall: The fitted model
+
+```{r size="scriptsize"}
+climate.lm <- lm(globaltemp ~ co2, data = climate)
+summary(climate.lm)
+```
+
+---
+
+# Prediction in Regression
+
+**Key Question:** 
+
+What do we want to predict?
+
+- the mean response ($\mu_Y$) for a particular value of $x$? 
+
+- or the response ($\widehat{y}$) for an individual (future) case?
+
+<br>
+<br>
+
+**Point Estimate:**
+
+- We use $\widehat{\beta}_0 + \widehat{\beta}_1 x$ to obtain our "best guess" in both situations.
+
+- But the two situations are *very* different, which is reflected in their SEs
+
+---
+
+## Intervals for Predictions
+
+**SEs:**
+
+---
+
+## Intervals for Predictions
+
+**Jargon:**
+
+- **Confidence interval** for the mean response, $\mu_Y$
+- **Prediction interval** for a single (future) observation, $y$
+
+---
+
+## Intervals for Predictions in R
+
+Suppose we wish to predict the global temperature for a CO$_2$ level of 400
+
+```{r}
+new.df <- data.frame(co2 = 400)
+predict(climate.lm, newdata = new.df, interval = "confidence")
+predict(climate.lm, newdata = new.df, interval = "predict")
+```
+
+which interval should we choose? Why?
+
+---
+
+## Intervals for Predictions in R
+
+We can also obtain predictions for all observations in our data set
+
+```{r, eval=FALSE}
+predict(climate.lm, interval = "confidence")
+predict(climate.lm, interval = "prediction")
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.height=3.5, fig.width=3.5}
+pred <- cbind(climate, predict(climate.lm, interval = "prediction"))
+
+library(ggplot2)
+qplot(x = co2, y = globaltemp, data = climate, geom = "point") + 
+  geom_smooth(method = "lm") + 
+  geom_line(data = pred, aes(y = lwr), linetype = I(2), colour = I("red")) + 
+  geom_line(data = pred, aes(y = upr), linetype = I(2), colour = I("red"))
+```
+
+---
+
+## Regression Assumptions
+
+What happens if our assumptions aren't valid?
+
+- **Linearity**: if nonlinear, everything breaks!
+
+- **Independence**: estimates are still unbiased (i.e. we fit the right line) but measures of the accuracy of those estimates (the SEs) are typically too small
+
+- **Normality**: estimates are still unbiased (i.e. we fit the right line), SEs are correct BUT confidence/prediction intervals are wrong (we can't use t-distribution)
+
+- **Constant error variance**: estimates are still unbiased but standard errors are wrong (and we don't know how wrong)

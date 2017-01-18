@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Diagnostic tools</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Math 430, Winter 2017" />
+    <link href="libs/remark-css-0.0.1/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Diagnostic tools
+### Math 430, Winter 2017
+
+---
+
+
+
+
+
+# Union Bank of Switzerland (UBS) reports
+
+- Produces regular reports on prices &amp; earnings in major cities throughout the world
+
+- Measures (in minutes of labor required for "typical" worker to purchase the commodity):
+    + prices of basic commodities (1 kg rice, 1 kg loaf of bread)
+    + price of a Big Mac at McDonald's
+
+- Data from 2003 (before recession) and 2009 (after recession) reports
+
+---
+
+# Some EDA results
+
+
+```r
+qplot(x = bigmac2003, y = bigmac2009, data = UBSprices) + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+---
+
+# Fitting the SLR model
+
+
+```r
+bigmac.lm &lt;- lm(bigmac2009 ~ bigmac2003, data = UBSprices)
+summary(bigmac.lm)
+```
+
+```
+## 
+## Call:
+## lm(formula = bigmac2009 ~ bigmac2003, data = UBSprices)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -32.968  -5.258  -2.159   0.187  77.081 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.73612    3.84985   1.750   0.0861 .  
+## bigmac2003   0.77886    0.07975   9.767 2.33e-13 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 18.35 on 52 degrees of freedom
+## Multiple R-squared:  0.6472,	Adjusted R-squared:  0.6404 
+## F-statistic: 95.39 on 1 and 52 DF,  p-value: 2.334e-13
+```
+
+---
+
+# Review: SLR Model Assumptions
+
+1. Linearity
+
+2. Independence
+
+3. Constant error variance
+
+4. Normality
+
+---
+
+# Consequences of a violation
+
+- **Non-linearity**: estimates are biased/meaningless
+
+- **Non-independence**: estimates are unbiased (i.e. we fit the right line), but the SEs are a problem (typically too small)
+
+- **Non-constant error variance**: estimates are unbiased but SEs are wrong (and we don't know how wrong)
+
+- **Normality**: estimates are unbiased, SEs are correct BUT 
+    + confidence intervals are wrong for small sample sizes (we can't use t-distribution)
+    
+    + prediction intervals are wrong for all sample sizes
+
+---
+
+# Residuals
+
+**Definition**: `\(e_i = y_i - \widehat{y}_i\)`
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+**Properties:**
+
+-  sum to zero (so, residuals can't be independent!)
+
+-  **uncorrelated** with `\(x\)` and `\(\widehat{y}\)`
+
+- normally distributed, but variance is not constant
+`$$e_i \sim \mathcal{N} \left(0, \sigma^2 \left[ 1 - \dfrac{1}{n} - \dfrac{(x_i - \overline{x})^2}{\sum (x_i - \overline{x})^2} \right] \right)$$`
+
+---
+# Standardized residuals
+
+**Review:**
+
+If `\(X\)` has mean `\(\mu\)` and standard deviation `\(\sigma\)`, then `\(\dfrac{X-\mu}{\sigma}\)` has mean 0 and standard deviation 1
+
+&lt;br&gt;
+
+**Standardized residuals**
+
+- Formula: `$$r_i = \dfrac{e_i}{s \sqrt{1 - \dfrac{1}{n} - \dfrac{(x_i - \overline{x})^2}{\sum (x_i - \overline{x})^2}}}$$`
+
+
+---
+
+# Residual Plots
+
+- Plot residuals vs. predicted values
+    + detect non-constant variance
+    + detect non-linearity
+    + detect outliers
+
+- Plot residuals vs. `\(x\)`
+    + in SLR, same as above
+
+- Plot residuals vs. other possible predictors
+    + detect important missing variable
+
+- Plot residuals vs. lagged residuals
+    + detect temporally correlated errors
+    + sort errors in time order, plot `\(e_i\)` vs. `\(e_{i-1}\)`
+
+---
+    
+# Normal quantile-quantile (Q-Q) plots
+
+**Use**: detect non-normality
+
+&lt;br&gt;
+
+**Construction**:
+    
+- plots ordered residuals vs. quantiles from `\(\mathcal{N}(0,1)\)`
+    
+- if in agreement, points will fall on diagonal line
+    
+- best to use standardized residuals
+
+
+---
+    
+# Normal quantile-quantile (Q-Q) plots
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+---
+    
+# Normal Q-Q plots
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+---
+    
+# Normal Q-Q plots
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+
+---
+    
+# Normal Q-Q plots
+
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+
+---
+
+# Calibrating Our Perception
+
+
+- https://gallery.shinyapps.io/slr_diag/
+
+- App simulates residual plots under different models
+
+---
+
+# UBS Residual Plots
+
+
+
+
+
+```r
+library(car) ## workhorse for residual plots
+residualPlot(bigmac.lm, pch = 16, type = "rstandard")
+plot(bigmac.lm, which = 2, pch = 16)
+```
+
+.pull-left[
+![](04-assess-slr_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+![](04-assess-slr_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+]
+
+
+---
+
+# UBS Residual Plots
+
+
+```r
+plot(bigmac.lm, which = 2, pch = 16)
+```
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+---
+
+# Outliers and influential points
+
+**Why we worry**
+
+`\(\widehat{\beta}_1 = r \cdot \dfrac{s_y}{s_x}\)`
+
+&lt;br&gt;
+
+**Methods:**
+
+1. **Graphical displays**: scatterplot, residual plot, boxplot of residuals, histogram of residuals
+&lt;br&gt;
+&lt;br&gt;
+
+2. **Measures of influence**: leverage, Cook's distance
+
+---
+
+# Leverage
+
+- **Idea**: Points farther from `\(\overline{x}\)` have greater potential to influence the slope
+
+- **Metric**: Leverage
+`$$h_i = \dfrac{1}{n} + \frac{\left(x_i - \overline{x}\right)^2}{\displaystyle\sum_{j=1}^n \left(x_j - \overline{x}\right)^2}$$`
+- `\(\sum h_i = 2\)` for SLR, so "typical" leverage is about `\(2/n\)`
+
+- red flag if `\(h_i &gt; 4/n\)`
+
+- **Caution:** leverage only refers to `\(x\)` coordinate, does not take into account the `\(y\)` coordinate
+
+
+---
+
+# UBS Leverage
+
+
+```r
+bigmac.lev &lt;- hatvalues(bigmac.lm)
+which(bigmac.lev &gt; 4/nrow(BigMac2003))
+```
+
+```
+##  Bogota    Kiev  Mumbai Nairobi 
+##       7      23      36      37
+```
+
+```r
+which(bigmac.lev &gt; 6/nrow(BigMac2003))
+```
+
+```
+##  Mumbai Nairobi 
+##      36      37
+```
+
+
+---
+
+# UBS Leverage
+
+
+```r
+plot(bigmac.lm, which = 5, pch = 16)
+```
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+
+# Cook's distance
+
+Measures amount of influence observation has on the estimated regression equation
+
+`$$D_i= \frac{\displaystyle\sum_{j=1}^n \left( \widehat{y}_{j(i)} - \widehat{y}_j \right)^2}{2 s^2} = \dfrac{r_i}{2} \cdot \dfrac{h_{ii}}{1 - h_{ii}}$$`
+
+* Rule of thumb: Investigate points with `\(D_i &gt; 4/(n-2)\)`
+
+* Better idea: look for gaps in a plot of `\(D_i\)`
+
+---
+
+# UBS Cook's Distance
+
+
+```r
+bigmac.cooksd &lt;- cooks.distance(bigmac.lm)
+head(bigmac.cooksd, 5)
+```
+
+```
+##    Amsterdam       Athens     Auckland      Bangkok    Barcelona 
+## 1.633498e-06 1.722379e-03 2.451051e-04 1.561796e-05 2.897748e-04
+```
+
+```r
+plot(bigmac.lm, which = 4, pch = 16)
+```
+
+![](04-assess-slr_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+
+# What do we do if our assumptions are violated?
+
+1. Change your assumptions (harder, need more theory)
+
+2. Transform `\(y\)`, `\(x\)`, or both
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true
+});
+if (window.HTMLWidgets) slideshow.on('showSlide', function (slide) {setTimeout(function() {window.dispatchEvent(new Event('resize'));}, 100)});</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
