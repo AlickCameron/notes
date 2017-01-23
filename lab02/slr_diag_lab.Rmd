@@ -1,0 +1,39 @@
+Lab 2: Regression Diagnostics
+==========
+
+The Association of Turkish Travel Agencies reports the number of foreign tourists 
+visiting Turkey (in thousands) and tourist spending (in millions of dollars) by year. You can load in the data with the following line of code.
+  
+```{r}
+tourism <- read.csv("https://github.com/math430-lu/data/raw/master/tourism.csv")
+```
+
+1. Plot the relationship between number of tourists and spending and describe it
+in words.
+
+2. What are the explanatory and response variables?
+
+3. Why might we want to fit a regression line to these data?
+
+4. Do the data meet the conditions required for fitting a least squares line? Use
+whatever plots are necessary.
+
+* * *
+
+The `RailTrail` data set contains information collected by the Pioneer Valley Planning Commission north of Chestnut Street in Florence, MA from April 5, 2005 to November 15, 2005. The data collectors set up a laser sensor, with breaks in the laser beam recording when a rail-trail user passed the data collection station. In addition to recording the volume of use, the data collectors also recorded weather information, such as the high temperature (in degrees Fahrenheit, `hightemp`). You can load in the data with the following line of code.
+  
+```{r}
+rail_trail <- read.csv("https://github.com/math430-lu/data/raw/master/RailTrail.csv")
+```
+
+
+
+
+5. Describe the relationship between `volume` of ridership and the high temperature 
+`hightemp`.
+
+6. What are the explanatory and response variables?
+
+7. Fit a regression line using `lm()`.  What is the equation for your line?
+
+8. Examine the residual plots.  Do the conditions for regression appear reasonable?

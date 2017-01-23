@@ -1,0 +1,147 @@
+---
+title: "SLR Diagnostics in R"
+author: "Math 430, Winter 2017"
+output: slidy_presentation
+---
+
+# Set up for diagnostics
+
+Load the R packages
+
+```{r message=FALSE}
+library(ggplot2) # for graphics
+library(mosaic)  # alternative graphics
+library(broom)   # for the augment() function
+library(dplyr)   # for the arrange() function
+```
+
+Load the data set
+
+```{r}
+voltage <- read.csv("https://github.com/math430-lu/data/raw/master/voltage.csv")
+head(voltage)
+```
+
+
+# Industrial experiment
+
+- Batches of electrical insulating fluid were subjected to constant voltages until the insulating property of the fluids broke down. 
+
+- 7 different voltage levels were studied and the measured responses were the times until breakdown.
+
+```{r}
+head(voltage)
+```
+
+# Fit the SLR model
+
+```{r}
+mod <- lm(Time ~ Voltage, data = voltage)
+summary(mod)
+```
+
+# Plot the SLR model
+
+```{r}
+ggplot(data = voltage, aes(x = Voltage, y = Time)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Voltage applied (kV)", y = "Time until breakdown (min)")
+```
+
+
+# Getting ready for diagnostics
+
+```{r}
+diag_df <- augment(mod)
+head(diag_df)
+```
+
+# Quick residual plots with `mplot`
+
+```{r}
+mplot(mod)
+```
+
+
+# Diagnostic plots the ggplot2 way
+
+### Drawing a residual plot
+
+```{r}
+ggplot(data = diag_df, aes(x = .fitted, y = .std.resid)) +
+  geom_hline(yintercept = 0, color = "blue") +
+  geom_point() +
+  labs(x = "Fitted value", y = "Standardized residuals")
+```
+
+
+# Diagnostic plots the ggplot2 way
+
+### Location-scale plot
+
+```{r}
+ggplot(data = diag_df, aes(x = .fitted, y = sqrt(abs(.std.resid)))) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  labs(x = "Fitted value", y = expression(sqrt(abs("Standardized residual"))))
+```
+
+
+
+# Diagnostic plots the ggplot2 way
+
+### Q-Q plot of the residuals
+
+```{r}
+ggplot(data = diag_df) +
+  stat_qq(aes(sample = .std.resid))
+```
+
+
+
+
+# Plotting leverage
+
+```{r}
+# Flag leverage > 4/n
+diag_df$flag.leverage <- diag_df$.hat > 4/nrow(diag_df)
+diag_df$id <- 1:nrow(diag_df)
+
+
+# Index plot for leverage
+ggplot(data = diag_df, aes(x = reorder(id, FUN = identity, .hat), y = .hat, color = flag.leverage)) +
+  geom_point() +
+  labs(x = "Row index", y = "Leverage") +
+  coord_flip()
+```
+
+
+# Arranging leverage
+
+You can also reorder the data frame by the leverage values
+
+```{r}
+arrange(diag_df, desc(.hat)) %>%
+  head(n = 10)
+```
+
+# Plotting Cook's distance
+
+```{r}
+# Flag Cook's D > 4/(n-2)
+diag_df$flag.cooksd <- diag_df$.cooksd > 4/(nrow(diag_df) - 2)
+
+# Index plot for Cook's D
+ggplot(data = diag_df, aes(x = reorder(id, FUN = identity, .cooksd), y = .cooksd, color = flag.cooksd)) +
+  geom_point() +
+  labs(x = "Row index", y = "Cook's distance") +
+  coord_flip()
+```
+
+# Arranging Cook's distance
+
+```{r}
+arrange(diag_df, desc(.cooksd)) %>%
+  head(n = 10)
+```
