@@ -1,0 +1,434 @@
+---
+title: "Transformations"
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation:
+    self_contained: true
+---
+
+## What do we do if our assumptions are violated?
+
+1. Change your assumptions (hard, need more stats)
+
+2. Transform $y$, $x$, or both
+
+
+## Transformations can...
+
+- address non-linear patterns (i.e. linear on transformed scale)
+- stabilize variance
+- correct skew
+- minimize the effects of outliers
+- estimate percentage effects 
+
+# Transforming the response
+
+## Example
+
+How is job difficulty related to salary?
+
+```{r echo=FALSE, message=FALSE}
+library(ggplot2)
+library(broom)
+library(car)
+salarygov <- read.csv("salarygov_inflated.csv")
+
+salary_mod <- lm(MaxSalary ~ Score, data = salarygov)
+# tidy(salary_mod)
+
+ggplot(data = salarygov, aes(x = Score, y = MaxSalary)) +
+  geom_point() +
+  labs(x = "Difficulty score", y = "Maximum salary") +
+  geom_smooth(method = "lm")
+```
+
+## Linearity and normality {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(salary_mod, which = 1)
+plot(salary_mod, which = 2)
+```
+
+Mean function may be nonlinear. Residuals have slightly heavy-tailed distribution.
+
+
+## Constant variance and influence {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(salary_mod, which = 3)
+plot(salary_mod, which = 5)
+```
+
+Variance seems to be increasing. No troubling influential values.
+
+
+## Power transformations
+
+Let, $U$ be a strictly positive variable, then the *power family of transformations* is defined by
+
+$$\psi(U, \lambda) = U^\lambda$$
+
+<br>
+<br>
+
+- Try values in the range [-1, 1] and see how they help problems, {-1, -1/2, 0, 1/3, 1/2, 1} is recommended
+
+<br>
+
+- Sometimes expansions to the range [-2, 2] is necessary
+
+## Rules of thumb
+
+- **log rule**: if values range over more than 1 order of magnitude and are strictly positive, then the natural log is likely helpful
+- **range rule**: if the range is considerably less than 1 order of magnitude, then transformations are unlikely to help
+- **square roots** are useful for count data
+
+## Estimating $\lambda$
+
+**Approach:**
+
+- Minimize RSS($\widehat{\lambda}$)
+
+- Use an inverse response plot
+
+**Application:**
+
+Use the `invResPlot` function found in the `car` package
+
+## `invResPlot`
+
+```{r}
+invResPlot(salary_mod) # prints lambda and RSS in console
+```
+
+
+## Transforming the linear model {.build .smaller}
+
+**Approach 1**: Create a new column in the data frame
+
+```{r message=FALSE}
+library(dplyr)
+salarygov <- mutate(salarygov, lmaxsalary = log(MaxSalary))
+log_mod1 <- lm(lmaxsalary ~ Score, data = salarygov)
+tidy(log_mod1)
+```
+
+
+**Approach 2**: Apply the transformation in the `lm` formula
+
+```{r}
+log_mod2 <- lm(log(MaxSalary) ~ Score, data = salarygov)
+tidy(log_mod2)
+```
+
+## Transformed linear model?
+
+```{r echo=FALSE}
+ggplot(data = salarygov, aes(x = Score, y = log(MaxSalary))) +
+  geom_point() +
+  labs(x = "Difficulty score", y = "log(Maximum salary)") +
+  geom_smooth(method = "lm")
+```
+
+
+## Linearity and normality {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(log_mod2, which = 1)
+plot(log_mod2, which = 2)
+```
+
+The mean function appears to be linear and the residuals are well-approximated by the normal distribution.
+
+## Constant variance and influence {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(log_mod2, which = 3)
+plot(log_mod2, which = 5)
+```
+
+There are no influential points and the appears to be constant.
+
+## Interpreting the slope?
+
+## Making predictions? 
+
+We can still use `predict` to make predictions...
+
+```{r}
+newdata <- data.frame(Score = 469) # avg. difficulty score
+cip <- predict(log_mod2, newdata = newdata, interval = "confidence")
+cip
+```
+
+but we need to back-transform
+
+```{r}
+exp(cip)
+```
+
+
+
+## Box-Cox transformation
+
+We can automate the selection of the power transformation using the **modified power family** originally defined by Box and Cox (1964)
+
+$$
+\psi_M(Y, \lambda_y) = \begin{cases}
+    \text{gm}(Y)^{1 - \lambda_y} \times (Y^{\lambda_y - 1})/\lambda_y & \lambda_y \ne 0\\
+    \text{gm}(Y) \times \log(Y) & \lambda_y =0
+  \end{cases}
+$$
+
+where $\text{gm}(Y) = \exp \left( \sum \log(y_i)/n \right)$
+
+<br>
+<br>
+- Transforming for normality of residuals
+<br>
+- $\lambda$ can be estimated via maximum likelihood
+
+## Box-Cox transformation
+
+```{r message=FALSE}
+boxCox(salary_mod) # to get the plot
+```
+
+## Box-Cox transformation
+
+```{r}
+summary(powerTransform(salary_mod)) # print the estimate
+```
+
+
+# Transforming the predictor
+
+## Example
+
+How are tree height and tree diameter related for the Western red cedar?
+
+```{r echo=FALSE}
+ufcwc <- read.csv("ufcwc.csv")
+ggplot(data = ufcwc, aes(x = Dbh, y = Height)) +
+  geom_point() +
+  labs(x = "Diameter at 137 cm above ground (in mm)", y = "Height (in dm)")
+```
+
+## `invTranPlot`
+
+```{r}
+invTranPlot(Height ~ Dbh, data = ufcwc) # prints lambda and RSS in console
+```
+
+
+## Transforming the linear model {.smaller}
+
+**Approach 1**: Create a new column in the data frame
+
+```{r message=FALSE}
+ufcwc <- mutate(ufcwc, ldbh = log(Dbh))
+rc_mod1 <- lm(Height ~ ldbh, data = ufcwc)
+tidy(rc_mod1)
+```
+
+
+**Approach 2**: Apply the transformation in the `lm` formula
+
+```{r}
+rc_mod2 <- lm(Height ~ log(Dbh), data = ufcwc)
+tidy(rc_mod2)
+```
+
+## Transformed linear model?
+
+```{r echo=FALSE}
+ggplot(data = ufcwc, aes(x = log(Dbh), y = Height)) +
+  geom_point() +
+  labs(x = "log(Diameter at 137 cm above ground (in mm))", y = "Height (in dm)") +
+  geom_smooth(method = "lm")
+```
+
+
+## Linearity and normality {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(rc_mod1, which = 1)
+plot(rc_mod1, which = 2)
+```
+
+The mean function appears to be linear and the residuals are well-approximated by the normal distribution.
+
+## Constant variance and influence {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(rc_mod1, which = 3)
+plot(rc_mod1, which = 5)
+```
+
+There are no influential points and the appears to be roughly constant.
+
+## Prediction {.build}
+
+If you added a new column to the data frame...
+
+```{r}
+newdata <- data.frame(ldbh = log(600))
+predict(rc_mod1, newdata = newdata, interval = "prediction")
+```
+
+If you transformed `Dbh` in the model formula...
+
+```{r}
+newdata2 <- data.frame(Dbh = 600)
+predict(rc_mod2, newdata = newdata2, interval = "prediction")
+```
+
+
+
+
+# Transforming both variables
+
+## Example
+
+How is the volume of a ship's cargo related to the time required to load and unload the cargo?
+
+```{r echo=FALSE}
+glakes <- read.table("http://www.stat.tamu.edu/~sheather/book/docs/datasets/glakes.txt", header = TRUE)
+ggplot(data = glakes, aes(x = Tonnage, y = Time)) +
+  geom_point()
+```
+
+
+## Approaches
+
+**Approach 1:**
+
+1. Use an inverse transformation plot to choose a transformation for X
+2. Transform X, then use an inverse response plot to choose a transformation for Y
+
+**Approach 2:**
+
+Transform X and Y simultaneously using the Box-Cox procedure
+
+## Graphical approach {.smaller}
+
+```{r}
+invTranPlot(Time ~ Tonnage, data = glakes, lambda = c(-1, -.5, -.33, 0, .33, .5, 1))
+```
+
+
+## Graphical approach
+
+```{r}
+cargo_mod1 <- lm(Time ~ I(Tonnage^.33), data = glakes)
+invResPlot(cargo_mod1, lambda = c(-1, -.5, -.33, 0, .33, .5, 1))
+```
+
+
+## Transformed linear model?
+
+```{r}
+cargo_mod2 <- lm(log(Time) ~ I(Tonnage^.33), data = glakes)
+```
+
+
+```{r echo=FALSE}
+ggplot(data = glakes, aes(x = Tonnage^.33, y = log(Time))) +
+  geom_point() +
+  labs(x = expression(Tonnage^{1/3}), y = "log(Time)") +
+  geom_smooth(method = "lm")
+```
+
+
+## Linearity and normality {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(cargo_mod2, which = 1)
+plot(cargo_mod2, which = 2)
+```
+
+The mean function appear to be linear and the residuals are well-approximated by the normal distribution.
+
+## Constant variance and influence {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(cargo_mod2, which = 3)
+plot(cargo_mod2, which = 5)
+```
+
+There are no influential points and the appears to be roughly constant.
+
+## Box-Cox approach
+
+```{r}
+summary(powerTransform(cbind(Time, Tonnage) ~ 1, glakes))
+```
+
+## Transformed linear model?
+
+```{r}
+cargo_bcmod <- lm(log(Time) ~ I(Tonnage^.25), data = glakes)
+```
+
+
+```{r echo=FALSE}
+ggplot(data = glakes, aes(x = Tonnage^.25, y = log(Time))) +
+  geom_point() +
+  labs(x = expression(Tonnage^{1/4}), y = "log(Tonnage)") +
+  geom_smooth(method = "lm")
+```
+
+
+## Linearity and normality {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(cargo_bcmod, which = 1)
+plot(cargo_bcmod, which = 2)
+```
+
+The mean function appears to be linear and the residuals are well-approximated by the normal distribution.
+
+## Constant variance and influence {.build}
+
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+plot(cargo_bcmod, which = 3)
+plot(cargo_bcmod, which = 5)
+```
+
+There are no influential points and the appears to be roughly constant.
+
+
+## A note on log transformations
+
+If we apply a log transformation to both the response and the predictor, then
+
+$$\% \Delta Y \approx \beta_1 \times \% \Delta x$$
+
+- So, for every 1\% increase in x, the model predicts a $\beta_1 \%$ increase in Y 
+
+- $\beta_1$ needs to be small for this to work out (see p.79 for details)
+
+## Issues with Transformations
+
+- You're often guessing
+    + Statistics is an art AND a science!
+<br>
+- Changes the interpretation of the parameters
+    + need to back-transform to provide interpretable results
+<br>
+<br>
+- Changes SEs of the parameters
+<br>
+- Not always easy to keep track of all your assumptions
+
+
