@@ -31,7 +31,7 @@ How is job difficulty related to salary?
 library(ggplot2)
 library(broom)
 library(car)
-salarygov <- read.csv("salarygov_inflated.csv")
+salarygov <- read.csv("https://github.com/math430-lu/data/raw/master/salarygov_inflated.csv")
 
 salary_mod <- lm(MaxSalary ~ Score, data = salarygov)
 # tidy(salary_mod)
@@ -212,7 +212,7 @@ summary(powerTransform(salary_mod)) # print the estimate
 How are tree height and tree diameter related for the Western red cedar?
 
 ```{r echo=FALSE}
-ufcwc <- read.csv("ufcwc.csv")
+ufcwc <- read.csv("https://github.com/math430-lu/data/raw/master/ufcwc.csv")
 ggplot(data = ufcwc, aes(x = Dbh, y = Height)) +
   geom_point() +
   labs(x = "Diameter at 137 cm above ground (in mm)", y = "Height (in dm)")
