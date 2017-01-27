@@ -1,0 +1,121 @@
+---
+title: "Assessing Goodness of Fit"
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation
+---
+
+```{r include=FALSE}
+glakes <- read.table("http://www.stat.tamu.edu/~sheather/book/docs/datasets/glakes.txt", header = TRUE)
+
+mod <- lm(log(Time) ~ I(Tonnage^.25), data = glakes)
+```
+
+
+## Partitioning variability
+
+  $$
+  \begin{aligned}
+    \text{Total sum of squares (SST)} &= \sum_{i=1}^n \left(y_i - \overline{y} \right)^2\\
+    \text{Sum of squares error (RSS)} &= \sum_{i=1}^n \left(y_i - \widehat{y}_i \right)^2\\
+    \text{Sum of squares due to model (SSreg)} &= \sum_{i=1}^n \left(\widehat{y}_i - \overline{y} \right)^2
+  \end{aligned}
+  $$
+
+<br>
+<br>
+
+ANOVA identity: $\text{SST} = \mathrm{SSModel} + \mathrm{SSE}$
+
+
+## Coefficient of Determination: $R^2$
+
+**Definition**: $R^2 \in [0,1] = \dfrac{\mathrm{SSreg}}{\mathrm{SST}} = 1 - \dfrac{\mathrm{RSS}}{\mathrm{SST}}$
+
+<br>
+
+**Interpretation**: Proportion of the variability in $y$ explained by the linear model.
+
+<br>
+
+**Intuition**: A better model explains more of the variability in $y$
+
+<br>
+
+**Pitfall**: $R^2$ does not talk about predictive ability of the model
+
+## Coefficient of Determination: $R^2$ {.smaller}
+
+```{r}
+summary(mod)
+```
+
+
+## Coefficient of Determination: $R^2$ {.smaller}
+
+```{r}
+library(broom)
+glance(mod)
+```
+
+
+## Predictive accuracy via cross validation
+
+1. Randomly split data set into two: a **training set** and a **holdout (test) set**
+2. Fit model to the training set
+3. Use the fitted model to predict the holdout set
+4. Compute cross validation metrics
+
+$$
+\begin{aligned}
+  \text{Predictive Bias} &= \dfrac{1}{n_{\text{test}}} \sum_{i=1}^{n_{\text{test}}} \left( y_i - \widehat{y}_i \right) \\
+  \text{Predictive Mean Square Error} &= \dfrac{1}{n_{\text{test}}} \sum_{i=1}^{n_{\text{test}}} \left( y_i - \widehat{y}_i \right)^2 \\
+  \text{RPMSE} &= \sqrt{\mathrm{PMSE}}
+\end{aligned}
+$$
+
+## Predictive accuracy via cross validation
+
+### **Interpretations**
+
+- **Bias**: systematic errors in our predictions
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+- **Root predicted mean square error**: How far off the predictions are, on average
+
+
+## Predictive Accuracy of Cargo Model
+
+```{r include=FALSE}
+set.seed(1234)
+```
+
+
+```{r, eval=FALSE}
+# Split data into training and test sets
+index <-  sample(1:nrow(glakes), size = 0.2 * nrow(glakes))
+train_data <- glakes[-index,]
+test_data <- glakes[index,]
+
+# Fit model to training data
+train_lm <- lm(log(Time) ~ I(Tonnage^.25), data = glakes)
+
+summary(train_lm)
+
+# Obtain predictions
+preds <- predict(train_lm, newdata = test_data)
+preds_orig <- exp(preds)
+
+# Calculate metrics
+bias <- mean(test_data$Time - preds_orig)
+pmse <- mean((test_data$Time - preds_orig)^2)
+rpmse <- sqrt(pmse)
+```
+
