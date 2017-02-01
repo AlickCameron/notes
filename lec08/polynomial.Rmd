@@ -1,0 +1,80 @@
+---
+title: "Polynomial Regression"
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation
+---
+
+## Modeling salary
+
+```{r, include=FALSE}
+library(ggplot2)
+library(car)
+
+profsalary <- read.table("http://www.stat.tamu.edu/~sheather/book/docs/datasets/profsalary.txt", header = TRUE)
+```
+
+What if the relationship between salary and years of experience wasn't linear?
+    
+```{r, message=FALSE, echo=FALSE}
+ggplot(data = profsalary, aes(x = Experience, y = Salary)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+
+## Polynomial regression
+
+
+
+```{r, message=FALSE, echo=FALSE, fig.height=4, fig.width=5}
+ggplot(data = profsalary, aes(x = Experience, y = Salary)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+A quadratic model seems sensible.
+$$Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + e_i$$
+
+## Polynomial regression in R {.smaller}
+
+```{r}
+quad.mod <- lm(Salary ~ Experience + I(Experience^2), data = profsalary)
+summary(quad.mod)
+```
+
+## Interpreting coefficients
+
+## Interpreting coefficients
+
+## Polynomial regression {.smaller}
+
+```{r fig.height=4, fig.width5}
+ggplot(data = profsalary, aes(x = Experience, y = Salary)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2))
+```
+
+## Model checking
+
+```{r, eval=FALSE}
+residualPlots(quad.mod, type = "rstudent", pch = 16)
+```
+
+
+```{r, fig.width = 8.5, echo=FALSE, fig.height = 3}
+residualPlots(quad.mod, type = "rstudent", pch = 16, layout = c(1, 3), tests = FALSE)
+```
+
+## Model checking
+
+```{r, fig.width=5, fig.height = 5}
+qqPlot(quad.mod, pch = 16, dist = "norm", reps = 5000)
+```
+
+
+## Beyond second-order models
+
+Polynomials for one predictor
+
+$$Y = \beta_0 + \beta_1 x + \beta_2 x^2 + \cdots + \beta_p x^p + \varepsilon_i$$
