@@ -1,0 +1,233 @@
+---
+title: "Introduction to Multiple Regression"
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation
+---
+
+## The data
+
+- In an effort to understand the
+important aspects of a satisfactory supervisor, clerical employees at a large financial organization company
+were asked to rate their immediate supervisor. 
+
+- The survey questions were designed to measure overall
+performance of the supervisor, as well as six additional characteristics. 
+
+- Employees were asked to rate the
+following statements on a scale from 0 to 100 (0 meaning "completely disagree" to 100 meaning "completely
+agree")
+
+## The data
+
+Variable |	Description
+-----        | -------------------
+`rating`     |	Overall rating of supervisor performance
+`complaints` |	Score for “Your supervisor handles employee complaints appropriately.”
+`privileges` |	Score for “Your supervisor allows special privileges.”
+`learn`      |	Score for “Your supervisor provides opportunities to learn new things.”
+`raises`     |	Score for “Your supervisor bases raises on performance.”
+`critical`   |	Score for “Your supervisor is too critical of poor performance.”
+`advance`    |	Score for “I am not satisfied with the rate I am advancing in the company?”
+
+
+
+## The data {.smaller}
+
+```{r}
+supervisor <- read.table("https://github.com/math430-lu/data/raw/master/supervisor.txt", 
+                         header = TRUE)
+head(supervisor)
+```
+
+## Problem overview
+
+**Primary research question**
+
+- What makes a good (or bad) supervisor?
+
+
+**Analysis**
+
+- What is the response variable?
+- What should we use for the predictor?
+
+# Multiple Regression
+
+## The model
+
+- Model
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i, \quad e_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2_e)$$
+
+- In matrix form
+
+$$\mathbf{Y} = \mathbf{X} \boldsymbol{\beta} + \mathbf{e}$$
+
+- Assumptions -- same as in SLR
+
+## The geometry
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i$$
+
+![](http://www.sjsu.edu/faculty/gerstman/EpiInfo/cont-mult1.jpg)
+
+
+## Interpreting $\beta_0$
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i, \quad e_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2_e)$$
+Uncentered model:
+
+<br>
+<br>
+<br>
+<br>
+
+Centered model:
+
+## Interpreting $\beta_k$
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i, \quad e_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2_e)$$
+
+
+## Interpreting $e_i$
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i, \quad e_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2_e)$$
+
+- Same as before: the distance an observation  falls from the "line"
+
+- Represents random error (that we can't model)
+
+## Interpreting $\sigma^2_e$
+
+$$Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_k x_{ip} + e_i, \quad e_i \overset{iid}{\sim} \mathcal{N}(0, \sigma^2_e)$$
+
+- Same as before: the typical (average) distance an observation  falls from the "line"
+
+
+## Fitting the model
+
+**Target:** 
+
+- Prediction equation
+
+$$\widehat{Y}_i = \widehat{\beta}_0 + \widehat{\beta}_1 x_{i1} + \widehat{\beta}_2 x_{i2} + \cdots + \widehat{\beta}_k x_{ip}$$
+
+  i.e. 
+  $$\widehat{\mathbf{Y}} = \mathbf{X} \boldsymbol{\widehat{\beta}}$$
+
+- Standard error for MLR model: $\widehat{\sigma}_e$
+
+
+## Fitting the model
+
+**Procedure:**
+
+- Least squares estimation: choose the coefficients to minimize 
+
+$$\text{SSE} = \sum_i \left(Y_i - \widehat{Y}_i \right)^2$$
+
+- $\widehat{\boldsymbol{\beta}} = \left( \mathbf{X}^\prime \mathbf{X} \right)^{-1} \mathbf{X}^\prime \mathbf{Y}$
+
+
+- Use $s^2 = \sqrt{\dfrac{\text{RSS}}{n-p-1}}$
+
+
+
+## Using R {.smaller}
+
+```{r}
+super.lm <- lm(overall ~ complaints + privileges + learn + raises + critical + advance, 
+               data = supervisor)
+summary(super.lm)
+```
+
+
+## Using R
+
+```{r}
+head(model.matrix(super.lm))
+```
+
+
+## Interpreting $\beta_k$ {.smaller}
+
+### Effects plots
+
+- Idea: visualize the effect of a predictor by fixing the other predictors at their sample mean (i.e. $\bar{x}_k$ values)
+
+```{r, fig.width=3.5, fig.height=3.5}
+library(effects)
+plot(Effect("complaints", super.lm))
+```
+
+
+# Inference
+
+
+## Review: The ANOVA identity
+
+  $$
+  \begin{aligned}
+    \text{Total sum of squares (SST)} &= \sum_{i=1}^n \left(y_i - \overline{y} \right)^2\\
+    \text{Sum of squares error (RSS)} &= \sum_{i=1}^n \left(y_i - \widehat{y}_i \right)^2\\
+    \text{Sum of squares due to model (SSreg)} &= \sum_{i=1}^n \left(\widehat{y}_i - \overline{y} \right)^2
+  \end{aligned}
+  $$
+  
+  
+## ANOVA tables
+
+
+## Review: $R^2$
+
+Coefficient of **Multiple** Determination
+
+$$R^2 = \dfrac{\text{SSModel}}{\text{SSTotal}} = 1 - \dfrac{\text{SSE}}{\text{SSTotal}}$$
+
+## Inference for all coefficients
+
+**Testing** $\mathbf{H_0:\  \boldsymbol{\beta_1} = \boldsymbol{\beta_2} = \cdots = \boldsymbol{\beta_k}  \mathbf{ = 0}}$
+
+
+## Inference for all coefficients {.smaller}
+
+```{r}
+summary(super.lm)
+```
+
+
+## Inference for all coefficients 
+
+```{r}
+null.lm <- lm(overall ~ 1, data = supervisor)
+anova(null.lm, super.lm)
+```
+
+```{r}
+1 - pf(10.502, df1 = 23, df2 = 29)
+```
+
+
+
+## Inference for a single coefficient
+
+**Testing** $\mathbf{H_0:}\  \beta_j= \beta_j^0$
+
+
+## Inference for a single coefficient
+
+```{r}
+library(broom)
+tidy(super.lm)
+```
+
+## Inference for a single coefficient
+
+**Confidence interval for** $\boldsymbol{\beta_j}$
+
+## Inference for a single coefficient
+
+```{r}
+confint(super.lm, level = 0.9)
+```

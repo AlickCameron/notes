@@ -1,0 +1,126 @@
+---
+title: "Basics of Matrix Algebra in R"
+author: "Math 430, Winter 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Vectors
+
+
+### Defining
+
+```{r}
+ a <- c(1, 3, 2)
+```
+
+Note: `a` will be printed as a row vector, but R defines it as a column vector. This can be seen through transposition
+
+### Transposing
+
+```{r}
+t(a)
+```
+
+```{r}
+t(t(a))
+```
+
+### Scalar multiplication
+
+```{r}
+3.14 * a
+```
+
+
+### Vector addition
+
+```{r}
+b <- c(2, 8, 9)
+a + b
+```
+
+
+
+## Matrices
+
+### Defining
+
+```{r}
+A <- matrix(c(1, 3, 2, 2, 8, 9), ncol = 3)
+A
+```
+
+```{r}
+ A2 <- matrix(c(1, 3, 2, 2, 8, 9), ncol = 3, byrow = TRUE)
+A2
+```
+
+
+### Transposing
+
+```{r}
+t(A)
+```
+
+
+
+### Scalar multiplication
+
+```{r}
+3.14 * A
+```
+
+
+### Addition
+
+```{r}
+B <- matrix(c(5, 8, 3, 4, 2, 7), ncol = 3, byrow = TRUE)
+A + B
+```
+
+
+### Multiplication
+
+#### Matrix multiplied by a vector
+
+A tempting, but incorrect, approach:
+
+```{r}
+X <- matrix(c(1, 1, 1, 2, 4, 6), ncol = 2, byrow = FALSE)
+b <- c(5, 8)
+X * b
+```
+
+Instead, use the `%*%` operator
+
+```{r}
+X %*% b
+```
+
+#### Matrix multiplied by a matrix
+
+```{r}
+t(X) %*% X
+```
+
+
+## Inverting a matrix
+
+```{r}
+Y <- c(1.5, 2.3, 3.7)
+XtX <- t(X) %*% X
+XtXinv <- solve(XtX)
+XtXinv %*% t(X) %*% Y
+```
+
+
+## Special matrices
+
+### The identity
+
+```{r}
+diag(3)
+```
+
