@@ -1,0 +1,194 @@
+---
+title: "Adding Categorical Predictors"
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(ggthemes)
+library(ggExtra)
+library(effects)
+library(broom)
+```
+
+
+## The data
+
+`UN11.csv` contains national health, welfare, and education statistics for 210 places, mostly UN members, but also other areas like Hong Kong that are not independent countries.
+
+Variable |	Description
+-----        | -------------------
+`region`     |	region of the world
+`group`      |	`oecd`, `africa`, or `other`
+`fertility`  |	number of children per woman
+`ppgdp`      |	per capita gross domestic product (US$)
+`lifeExpF`   |	female life expectancy (years)
+`pctUrban`   |	% urban
+
+
+
+## The data {.smaller}
+
+```{r}
+UN11 <- read.csv("https://github.com/math430-lu/data/raw/master/UN11.csv")
+head(UN11)
+```
+
+## Problem overview
+
+**Primary research question**
+
+- How does the expected life span of women (`lifeExpF`) differ between the three groups of countries?
+
+
+**Analysis**
+
+- What is the response variable?
+- What should we use for the predictor?
+
+
+## Life expectancy by group
+
+```{r fig.width=4, fig.height=4}
+UN11$group <- factor(UN11$group, levels = c("oecd", "other", "africa"))
+ggplot(data = UN11, aes(x = group, y = lifeExpF)) + 
+  geom_boxplot()
+```
+
+## Categorical predictors
+
+- We use **dummy variables** (i.e. indicator variables) to put categories in a mathematical formula
+
+- General idea:
+
+<br>
+<br>
+
+- Coding `group` into dummy variables
+
+## Fitting the no-intercept model in R {.smaller}
+
+Model formula:
+
+```{r}
+lexp_grp <- lm(lifeExpF ~ group - 1, data = UN11)
+summary(lexp_grp)
+```
+
+## Interpreting the coefficients
+
+## Interpreting the coefficients {.smaller}
+
+```{r fig.height = 4, fig.width = 4}
+plot(Effect("group", mod = lexp_grp))
+```
+
+## Fitting the model with an intercept in R {.smaller}
+
+```{r}
+lexp_grp <- lm(lifeExpF ~ group, data = UN11)
+summary(lexp_grp)
+```
+
+## Interpreting the coefficients
+
+## Comparing level means
+
+## Comparing level means
+
+```{r}
+vcov(lexp_grp)
+```
+
+
+## Adding a continuous predictor
+
+**Research question**
+
+- Can we find a model that better explains expected life span by incorporating other predictors?
+
+**Analysis**
+
+- MLR model with `group` and other predictors
+
+## Adding a continuous predictor {.smaller}
+
+```{r fig.width=5.5, fig.height=3.5}
+ggplot(data = UN11, aes(x = log(ppgdp), y = lifeExpF, color = group, shape = group)) +
+  geom_point() +
+  scale_color_colorblind()
+```
+
+How can we build this model?
+
+## Parallel lines model
+
+$Y = \beta_0 + \beta_1 I_{other} + \beta_2 I_{africa} + \beta_3 x + e$
+
+```{r echo=FALSE, fig.width=5.5, fig.height=3.5}
+lexp_mod2 <- lm(lifeExpF ~ group + log(ppgdp), data = UN11)
+parallel_df <- augment(lexp_mod2)
+
+ggplot(data = UN11, aes(x = log(ppgdp), y = lifeExpF, color = group, shape = group)) +
+  geom_point() +
+  geom_line(data = parallel_df, aes(x = log.ppgdp., y = .fitted)) +
+  scale_color_colorblind()
+```
+
+
+## Fitting the model in R {.smaller}
+
+```{r}
+parallel_mod <- lm(lifeExpF ~ group + log(ppgdp), data = UN11)
+summary(parallel_mod)
+```
+
+## Interpreting the coefficients {.smaller}
+
+```{r fig.height = 4, fig.width=8}
+plot(allEffects(parallel_mod, default.levels=50), ylim=c(60, 85),
+     grid=TRUE, multiline=TRUE)
+```
+
+
+## Unrelated lines model
+
+$Y = \beta_0 + \beta_1 I_{other} + \beta_2 I_{africa} + \beta_3 x + \beta_4 I_{other} x + \beta_5 I_{africa} x + e$
+
+```{r echo = FALSE, fig.width=5.5, fig.height=3.5}
+ggplot(data = UN11, aes(x = log(ppgdp), y = lifeExpF, color = group, shape = group)) +
+  geom_point() +
+  stat_smooth(method = "lm", se = FALSE) +
+  scale_color_colorblind()
+```
+
+
+## Fitting the model in R {.smaller}
+
+```{r}
+unrelated_mod <- lm(lifeExpF ~ group * log(ppgdp), data = UN11)
+summary(unrelated_mod)
+```
+
+## Interpreting the coefficients {.smaller}
+
+```{r fig.height = 5, fig.width=5}
+plot(Effect(c("group", "ppgdp"), unrelated_mod, default.levels=100),
+     rug=FALSE, grid=TRUE, multiline=TRUE)
+```
+
+
+## Comparing models
+
+How can we determine which model we should prefer?
+
+## Partial F-tests
+
+## Partial F-tests in R
+
+```{r}
+anova(parallel_mod, unrelated_mod)
+```
+
