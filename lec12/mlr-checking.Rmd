@@ -1,0 +1,543 @@
+---
+title: "MLR: Model Checking"
+author: "Math 430, Winter"
+output:
+  ioslides_presentation
+---
+
+## Toolkit
+
+For model diagnostics, the `car` package is particularly useful:
+```{r}
+library(car)
+```
+
+# Assessing model assumptions
+
+
+## CAUTION: Residuals in MLR {.smaller}
+
+
+```{r fig.width=5.25, fig.height=5.25, fig.align='center', echo=FALSE}
+data("caution", package = "alr4")
+pairs(y ~ ., data = caution)
+```
+
+
+## CAUTION: Residuals in MLR {.smaller}
+
+When there are many regressors in a model, we cannot necessarily associate shapes in a residual plot with a particular problem with the assumptions.
+
+<div class="columns-2">
+```{r echo=FALSE, fig.height=4, fig.width=4}
+caution_mod <- lm(y ~ x1 + x2, data = caution)
+residualPlot(caution_mod, type = "rstandard")
+```
+
+  
+<br>
+<br>
+<br>
+  
+- Fitted: $E(\bf Y|X = x) = \beta_0 + \beta_1 x_1 + \beta_2 x_2$
+- Truth: $E(\bf Y|X = x) = \dfrac{|x_1|}{2 + (1.5 + x_2)^2}$
+
+</div>
+
+## Example: Fuel consumption {.smaller}
+
+How does fuel consumption vary over the 50 states and the District of Columbia?
+
+Variable | Description
+-----|-------------------------------------------
+Drivers | Number of licensed drivers in the state
+FuelC | Gasoline sold for road use (thousands of gallons)
+Income | Per person personal income (thousands of dollars)
+Miles | Miles of Federal-aid highway miles in the state
+Pop | Population age 16 and over
+Tax | Gasoline state tax rate (cents per gallon)
+MPC | Estimated miles driven per capita
+Dlic | Number of licensed drivers in the state per 1,000 people age 16 and over ($1000 \times Drivers/Pop$)
+Fuel | Fuel consumption (thousands of gallons) per 1,000 people age 16 and over ($1000 \times FuelC/Pop$)
+
+
+## {.smaller}
+
+```{r include=FALSE}
+fuel2001 <- read.csv("data/fuel2001.csv")
+```
+
+```{r fig.height=5.5, fig.width=5.5, fig.align='center'}
+pairs(Fuel ~ Income + log(Miles) + Tax + MPC + Dlic, data = fuel2001)
+```
+
+
+## {.smaller}
+
+```{r}
+mod1 <- lm(Fuel ~ Tax + Dlic + Income + log(Miles), data = fuel2001)
+summary(mod1)
+```
+
+
+
+## Model checking: Linearity
+
+**Effects of a violation**
+
+- coefficients and fitted values are biased
+- inferences not valid
+
+**Diagnostics**
+
+- Residual plots
+    + residuals vs. fitted values
+    + residuals vs. each predictor
+    + residuals vs. hypothetical new predictors
+
+- <div class="blue">Added variable plots</div>
+
+- <div class="blue">Marginal model plots</div>
+
+- Test for curvature
+    
+## Model checking: Linearity
+
+```{r eval=FALSE}
+residualPlots(mod1, layout = c(2, 3), type = "rstandard")
+```
+
+
+```{r, fig.width = 6.5, echo=FALSE}
+residualPlots(mod1, tests = FALSE, layout = c(2, 3), type = "rstandard")
+```
+
+
+## Model checking: Linearity
+
+### Added Variable Plots
+
+- Display relationship of $Y$ and $X_j$ after adjusting for other variables
+
+- Construction
+    + $e_j =$ residuals regressing $Y$ on all $X$s except $X_j$
+    + $u_j=$ residuals regressing $X_j$ on all other $X$s
+    + Plot $e_j$ vs. $u_j$
+  
+## Added Variable Plots in R
+
+```{r, eval=FALSE}
+avPlots(mod1, pch = 16)
+```
+
+```{r, echo=FALSE, fig.width = 6.5, fig.align='center'}
+avPlots(mod1, layout = c(2, 2), pch = 16)
+```
+
+## Model checking: Linearity
+
+### Marginal Model Plots
+
+- Idea: check whether $E(Y | x_i)$ is well approximated by $E(\widehat{Y} | x_i)$
+
+- Construction
+    + Plot the response on the y-axis
+    + Plot a predictor, or linear combination of the predictors (e.g. $\widehat{y}_i$) on the x-axis
+    + Add a nonparametric smoother to the plot
+    + Use the fitted values from the model to plot the conditional mean (via nonparametric smoother)
+    
+##  Marginal Model Plots
+
+```{r echo=FALSE, fig.width = 8.5}
+library(ggplot2)
+library(gridExtra)
+library(broom)
+
+mod1_aug <- augment(mod1)
+
+p1 <- ggplot(data = mod1_aug, aes(x = Dlic, y = Fuel)) +
+  geom_point() + 
+  stat_smooth(method = "loess", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Y vs. Dlic")
+
+p2 <- ggplot(data = mod1_aug, aes(x = Dlic, y = .fitted)) +
+  geom_point() + 
+  stat_smooth(method = "loess", se = FALSE, color = "red", linetype = 2) +
+  theme_minimal() +
+  labs(title = expression(paste(hat(Y), " vs. Dlic")), y = "Fuel")
+
+grid.arrange(p1, p2, ncol = 2)
+
+# create plot of Y vs. x with nonparametric smoother on left
+# create plot of Yhat vs. x with line on right
+# then on next slide, superimpose...
+```
+
+##  Marginal Model Plots
+
+```{r echo=FALSE, fig.width=4.25, fig.align='center'}
+ggplot(data = mod1_aug, aes(x = Dlic, y = Fuel)) +
+  geom_point() + 
+  stat_smooth(method = "loess", se = FALSE) +
+  stat_smooth( aes(x = Dlic, y = .fitted), method = "loess", se = FALSE, color = "red", linetype = 2) +
+  theme_minimal() +
+  labs(title = "Marginal Model Plot")
+```
+
+
+##  Marginal Model Plots in R
+
+```{r message=FALSE, fig.width = 6.5}
+mmps(mod1, layout = c(2,3))
+```
+
+
+## Marginal model vs. added variable plots
+
+- **Marginal model plots**: are useful in checking to see that you're doing a good job of modeling the marginal relationship between a given predictor and the response.
+
+- **Added variable plots**: assess how much variation in the response can be explained by a given predictor <u>after</u> the other predictors have already been taken into account (links to p-values).
+
+## Model checking: Linearity
+
+### Test for curvature
+
+- If predictor $U$ is in question, refit the regression with an added $U^2$ term.
+- Look at t-test for the slope associated with $U^2$.
+
+## Test for curvature in R
+
+```{r}
+# I only specified plot = FALSE for the slides
+residualPlots(mod1, plot = FALSE) 
+```
+
+
+
+## Remedies for nonlinearity
+
+- Nonlinear regression models (Grad school)
+- Transformations of $Y$
+- Transformations of $X$
+- Polynomial regression
+
+
+## Model checking: Constant variance
+
+**Effects of a violation**
+
+- Coefficients are unbiased
+- $se(\widehat{\beta}_i)$s are biased (often too small $\Longrightarrow$ CIs too narrow)
+
+**Diagnostics**
+
+- Residual plots
+    + residuals vs. fitted values
+    + residuals vs. each predictor
+
+- <div class="blue">Breusch-Pagan test</div>
+
+
+## Model checking: Constant variance {.smaller}
+
+### Breusch-Pagan test 
+
+- $H_0:$ constant error variance
+- $H_A:$ error variance changes with the level of the response (fitted values), or with a linear combination of predictors
+
+```{r}
+library(car) # if not loaded
+ncvTest(mod1)
+```
+
+```{r}
+ncvTest(mod1, ~ Tax + Dlic + Income + log(Miles))
+```
+
+## Remedies for nonconstant variance
+
+- Transformations of $Y$
+    + $\sqrt{Y}$ for counts
+    + $\log$ of positive #s with large range
+    + $\sin^{-1}(\sqrt{Y})$ or $\log\left(\frac{Y}{1-Y} \right)$ for proportions ($0 \le Y \le 1$)
+- Weighted least squares (nice idea, see chapter 4)
+- Use "sandwich estimator" for to obtain ses (inefficient)
+- Use a generalized linear model
+
+
+## Model checking: Uncorrelated errors
+
+**Effects of a violation**
+
+- coefficients are unbiased
+- $se(\widehat{\beta}_i)$s are biased, often smaller than necessary 
+- inferences not valid
+
+**Diagnostics**
+
+- Residual plots
+    + residuals vs. time (or other factor inducing correlation)
+    + residuals vs. lagged residuals
+    + examine residuals in clusters (e.g., family, school)
+- Think about data collection process
+
+
+## Model checking: Normal errors
+
+**Effects of a violation**
+
+- problems with prediction
+- inference for coefficients OK in large samples
+- inference for coefficients problematic in small samples
+
+
+**Diagnostics**
+
+- normal Q-Q plot
+- case diagnostics (for outliers)
+
+## Model checking: Normal errors
+
+```{r, fig.width = 5, fig.height = 5}
+qqPlot(mod1, dist = "norm", pch = 16, line = "quartiles")
+```
+
+
+
+## Remedies for non-normality
+
+- Transformations
+- Generalized linear models (Grad school or IS)
+
+
+# Detecting outliers and influential points
+
+## Standardized residuals
+
+Recall that standardized residuals are calculated by dividing by their standard deviation
+
+$$r_i = \dfrac{\widehat{e}_i}{ s \sqrt{1 - h_{ii}}}$$
+
+Observations with <u>large</u> standardized residuals can be considered outliers. 
+
+Rule of thumb: 
+
+- $|r_i|>2$ for small data sets
+- $|r_i|>4$ for large data sets
+
+
+## Case diagnostics: Leverage
+
+**Definition** 
+
+Pull off the diagonal elements of the hat matrix
+
+$$\bf H = X (X^\prime X)^{-1} X^\prime$$
+
+**Cutoff**
+
+- $2(k+1)/n$
+- $3(k+1)/n$
+- Also a good idea to examine a histogram
+
+
+## Case diagnostics: DFFITS
+
+Measures the effect of the $i^\text{th}$ case on the fitted value for $Y_i$
+
+$$DFFITS_i = \dfrac{ \widehat{Y}_{i} - \widehat{Y}_{i(i)}}{\sqrt{\text{MSE}_{(i)} h_{ii}}}$$
+
+where $MSE_{(i)} = RSS_{(i)} / (n - p - 1)$
+
+**Cutoff**
+
+- $|DFFITS_i|>1$ considered large in small or medium samples
+- $|DFFITS_i|>2\sqrt{\frac{p+1}{n}}$ considered large in big samples
+- Judge by relative standing
+
+## Case diagnostics: Cook's D
+
+Measures effect an  observation has on <u>all</u> of the fitted values
+
+$$D_i= \frac{\displaystyle\sum_{j=1}^n \left(\widehat{Y}_j - \widehat{Y}_{j(i)} \right)^2}{(p+1) \text{MSE}} = \dfrac{r^2_i}{p+1}\dfrac{h_{ii}}{1-h_{ii}}$$
+
+**Cutoff**
+
+- $D_i > F_{p+1, n-p-1, 0.5}$ is of substantial concern
+- Also can judge relative standing of  $D_i$ 
+
+
+
+
+## Case diagnostics: DFBETAS
+
+Measures the effect of an observation on a single coefficient
+
+$$DFBETAS_{k,i} = \dfrac{\widehat{\beta}_k - \widehat{\beta}_{k(i)}}{SE_{\beta_{(i)}}}$$
+
+
+**Cutoff**
+
+- $DFBETA_i>1$ in small or medium samples
+- $DFBETA_i > 2/\sqrt{n}$ in large samples
+
+
+
+
+## Case diagnostics in R
+
+```{r}
+case.infl <- influence.measures(mod1)
+
+# print which observations "are" influential
+which(apply(case.infl$is.inf, 1, any))
+```
+
+```{r, eval=FALSE}
+# We can also call the measure individually
+hatvalues(mod1)
+cooks.distance(mod1)
+dffits(mod1)
+dfbetas(mod1)
+```
+
+# Detecting multicollinearity
+
+## Example: Car seat position
+
+**Research question:** 
+
+- Car designers would find it helpful to know where different drivers will position the seat depending on their size and age.
+
+- Position can be measured by hip center
+
+<img src="http://www.oneshift.com/articles/uploads/large-news_4825.jpg" height="300px" width="500px" />
+
+
+
+## Example: Car seat position {.smaller}
+
+Researchers at the HuMoSim laboratory at the University of Michigan collected data on 38 drivers:
+
+Variable | Description
+---|------------
+`Age` | Age (years)
+`Weight` | Weight (lbs)
+`HtShoes` | Height in shoes (cm)
+`Ht`     | Height in bare feet (cm)
+`Seated` | Seated height (cm)
+`Arm`    | Lower arm length (cm)
+`Thigh`  | Thigh length (cm)
+`Leg`    | Lower leg length (cm)
+`hipcenter` | horizontal distance of the midpoint of the hips from a fixed location in the car (mm)
+
+## Example: Car seat position
+
+
+```{r echo=FALSE, message=FALSE}
+library(faraway)
+data(seatpos)
+head(seatpos)
+```
+
+## Example: Car seat position {.smaller}
+
+```{r}
+seatpos_mod <- lm(hipcenter ~ ., data = seatpos)
+# the dot in the formula notation means 'all other variables'
+broom::tidy(seatpos_mod)
+broom::glance(seatpos_mod)
+```
+
+## Multicollinearity
+
+- Definition: situation where 1+ predictors are "nearly" linearly related to the others.
+
+- This is not a model violation, but we treat it like one because...
+    + $se(\widehat{\beta}_i)$s are too big
+    + it's difficult to interpret individual $se(\widehat{\beta}_i)$s
+    + $se(\widehat{\beta}_i)$s change a lot with minor changes to the model/data (e.g., if we remove a case or a variable)
+
+## Diagnosing Multicollinearity
+
+- Examine scatterplot matrix
+- Examine pairwise correlations between predictors
+- Look for $\widehat{\beta}_i$s with unusual signs
+- Notice great sensitivity
+- Calculate the **Variance Inflation Factor (VIF)**
+
+##
+
+```{r, echo=FALSE, fig.align='center', fig.height=6.5, fig.width=6.5}
+pairs(hipcenter ~ ., data = seatpos)
+```
+
+## {.smaller}
+
+```{r, include=FALSE}
+options(digits = 2)
+```
+
+
+```{r}
+cor(seatpos)
+```
+
+```{r, include=FALSE}
+options(digits = 7)
+```
+
+
+## Variance Inflation Factor (VIF)
+
+The variance of a given slope can be written
+
+$$Var(\widehat{\beta}_j) = \dfrac{1}{1 - R^2_j} \times \dfrac{\sigma^2}{(n-1)s^2_{x_j}}$$
+
+The first term is the VIF: $\dfrac{1}{1 - R^2_j}$
+
+- $\text{VIF}_j > 5$ suspicions begin ($R^2_i > .8$)
+- $\text{VIF}_j > 10$ indicates a problem ($R^2_i > .9$)
+- $\text{VIF}_j > 100$ indicates a big problem ($R^2_i > .99$)
+
+## Diagnosing Multicollinearity {.small}
+
+```{r}
+vif(seatpos_mod)
+```
+
+## Remedies for collinearity
+
+- Use model only for prediction
+- Drop highly correlated variables (USE CAUTION!)
+- Create composite variables
+- Find new cases that "break" the observed correlation (i.e., have a different pattern)
+
+## Simplifying the model {.smaller}
+
+```{r}
+seatpos_mod2 <- lm(hipcenter ~ Age + Weight + Ht, data = seatpos)
+summary(seatpos_mod2)
+```
+
+## Simplifying the model
+```{r}
+vif(seatpos_mod2)
+```
+
+
+# Diagnostics summary
+
+## Diagnostics summary
+
+Before drawing any conclusions from a regression model, we must be confident it is a valid way to model the data. Our model assumes:
+
+- **Linearity**: the conditional mean of the response is a linear function of the predictors.
+- The errors have **constant variance** and are **uncorrelated.**
+- The errors are **normally distributed with mean zero**.
+
+It's also sensible to build a model with:
+
+- No highly influential points.
+- Low multicollinearity.
