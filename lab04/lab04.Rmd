@@ -1,0 +1,43 @@
+Lab 4: MLR Diagnostics
+==========
+
+
+An analyst for the auto industry has asked for your help in modeling data on the prices of new cars. Interest centers on modeling suggested retail price as a function of the cost to the dealer for 234 new cars. We will use data on the following variables:
+
+
+Variable | Description
+-------- | -------------
+`SuggestedRetailPrice` (Y) | Suggested Retail Price
+`EngineSize` ($x_1$) | Engine size (liters)
+`Cylinders` ($x_2$) | Number of cylinders
+`Horsepower` ($x_3$) | Horsepower
+`HighwayMPG` ($x_4$) | highway fuel economy
+`Weight` ($x_5$) | Weight in lbs
+`WheelBase` ($x_6$) | Wheel Base (inches)
+`Hybrid` ($x_7$) | 1 if a hybrid, 0 otherwise
+
+The data can be obtained from the book's website:
+
+```{r}
+cars <- read.csv("http://www.stat.tamu.edu/~sheather/book/docs/datasets/cars04.csv")
+```
+
+Your task is to build a valid model to predict the suggested retail price using the above variables.
+
+1. Fit the following model.
+$$Y_i = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + \beta_4 x_4 + \beta_5 x_5 + \beta_6 x_6 + \beta_7 x_7 + e_i$$
+
+2. Is the above model valid? (Hint: In a valid model the assumptions are not violated.)
+
+3. Suppose that you did not believe the above model was valid. One approach to correct model deficiencies is to transform the predictor variables. The below command runs the Box-Cox procedure to simultaneously transform the predictors:
+
+    ```
+summary(powerTransform(cbind(EngineSize, Cylinders, Horsepower, HighwayMPG, Weight, WheelBase) ~ 1, data = cars))
+```
+    
+    Use this information to transform the predictors (you may want to round to more "conventional" power transformations) and log transform the response.
+    
+4. Is the transformed model valid?
+
+
+
