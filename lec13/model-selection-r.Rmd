@@ -1,0 +1,234 @@
+---
+title: 'MLR: Model Selection in R'
+author: "Math 430, Winter 2017"
+output:
+  ioslides_presentation
+---
+
+```{r, include=FALSE}
+library(ggplot2)
+library(car)
+library(alr4)
+library(plyr)
+```
+
+# Highway accident data
+
+## {.smaller}
+
+Variable    | Description
+--------| -------------------------
+`adt`   | average daily traffic count (thousands)
+`trks`  | truck volume as a percent of the total volume
+`lane`  | total number of lanes of traffic
+`acpt`  | number of access points per mile
+`sigs`  | number of signalized interchanges per mile
+`itg`   | number of freeway-type interchanges per mile
+`slim`  | speed limit
+`len`   | length of the Highway segment (miles)
+`lwid`  | lane width (feet)
+`shld`  | width in feet of outer shoulder on the roadway
+`htype` | type of roadway/funding source
+`rate`  | accident rate per million vehicle miles
+
+
+## {.centered}
+
+```{r, fig.width=6.5, fig.height=6.5, echo=FALSE}
+pairs(rate ~ ., data = Highway)
+```
+
+##
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
+full_mod <- lm(rate ~ ., data = Highway)
+residualPlots(full_mod, type = "rstandard", layout = c(3, 4), tests = FALSE)
+```
+
+## 
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
+avPlots(full_mod, terms = ~ adt + trks + lane + acpt + sigs + itg + slim + len + lwid + shld, layout = c(3, 4))
+```
+
+
+##
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
+mmps(full_mod, ~ adt + trks + lane + acpt + sigs + itg + slim + len + lwid + shld, layout = c(3, 4))
+```
+
+
+## {.smaller}
+
+```{r echo=FALSE}
+inverseResponsePlot(full_mod)
+```
+
+
+## {.smaller}
+
+```{r include=FALSE}
+# Investigate tforms using Box-Cox
+summary(powerTransform(cbind(adt, trks, lane, acpt, slim, len, lwid, shld) ~ 1, data = Highway))
+```
+
+
+```{r tidy=TRUE}
+Highway <- mutate(Highway, sigs1 = (sigs * len + 1) / len)
+full_mod_tform <- lm(log(rate) ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1), data = Highway)
+```
+
+## 
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
+residualPlots(full_mod_tform, type = "rstandard", layout = c(3, 4), tests = FALSE)
+```
+
+## 
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
+avPlots(full_mod_tform, terms = ~ . - htype, layout = c(3, 4))
+```
+
+
+##
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6, message=FALSE, warning=FALSE}
+mmps(full_mod_tform, ~ . - htype, layout = c(3, 4))
+```
+
+
+
+# The `step` command
+
+## Backward elimination {.smaller}
+
+
+```{r, include=FALSE}
+belim <- step(full_mod_tform, scope = list(lower = ~ 1), direction = "backward", trace = 0)
+```
+
+
+```{r, eval=FALSE}
+belim <- step(full_mod_tform, scope = list(lower = ~ 1), direction = "backward")
+```
+
+```{r}
+broom::tidy(belim)
+```
+
+
+
+## Forward selection {.smaller}
+
+```{r, include=FALSE}
+null_mod <- lm(log(rate) ~ 1, data = Highway)
+f <- formula(full_mod)
+fselect <- step(null_mod, scope = list(lower = ~ 1, 
+upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
+    lwid + shld + htype + sigs1),
+direction = "forward", trace = 0)
+```
+
+```{r, eval=FALSE}
+null_mod <- lm(slog(rate) ~ 1, data = Highway)
+fselect <- step(null_mod, scope = list(lower = ~ 1, 
+upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
+    lwid + shld + htype + sigs1),
+direction = "forward")
+```
+
+```{r}
+broom::tidy(fselect)
+```
+
+
+## Stepwise selection {.smaller}
+
+```{r, tidy=FALSE, include=FALSE}
+step_hwy <- step(null_mod, scope = list(lower = ~ 1, 
+upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
+    lwid + shld + htype + sigs1),
+direction = "both", trace=0)
+```
+
+```{r, tidy=FALSE, eval=FALSE}
+step_hwy <- step(null_mod, scope = list(lower = ~ 1, 
+upper =  ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
+    lwid + shld + htype + sigs1),
+direction = "both")
+```
+
+```{r}
+broom::tidy(step_hwy)
+```
+
+
+## Using BIC rather than AIC {.smaller}
+
+```{r, include=FALSE}
+belim_bic <- step(full_mod_tform, scope = list(lower = ~ 1), direction = "backward", 
+                   k = log(nrow(Highway)), trace=0)
+```
+
+
+```{r, eval=FALSE}
+belim_bic <- step(full_mod_tform, scope = list(lower = ~ 1), direction = "backward", 
+                   k = log(nrow(Highway)))
+```
+
+```{r}
+broom::tidy(belim_bic)
+```
+
+
+
+# The `regsubsets` command
+
+## All subsets in R {.smaller}
+
+```{r tidy=TRUE}
+library(leaps)
+regfit_full <- regsubsets(log(rate) ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1), data = Highway, 
+                          method = "exhaustive", nvmax  = 11,
+                          nbest = 1)
+reg_summary <- summary(regfit_full)
+```
+
+## Investigating the results
+
+```{r, fig.height = 5, fig.width = 5}
+plot(regfit_full, scale = "adjr2")
+```
+
+## Investigating the results
+
+```{r, fig.height = 5, fig.width = 5}
+plot(regfit_full, scale = "bic")
+```
+
+## Another plot option
+
+```{r, include=FALSE}
+
+best.vars <- function(scale, value){
+  if(unique(scale) %in% c("r2", "adjr2")) value == max(value)
+  else value == min(value)
+}
+
+allsub.df <- data.frame(vars = rep(1:11, times = 3), scale = rep(c("r2", "adjr2", "bic"), each = 11), value = c(reg_summary$rsq, reg_summary$adjr2, reg_summary$bic))
+allsub.df$scale <- factor(allsub.df$scale, c("r2", "adjr2", "bic"))
+allsub.df <- ddply(allsub.df, .(scale), mutate, optim = best.vars(scale, value))
+```
+
+
+```{r, echo=FALSE, fig.width = 6.5, fig.height = 5.5}
+qplot(x =vars, y = value, data = allsub.df, geom = c("point", "line")) +
+  facet_wrap(~ scale, ncol = 2, scales = "free") +
+  xlab("No. Of Variables") +
+  ylab("Value") + 
+  scale_x_continuous(breaks=1:11) + 
+  geom_point(data = subset(allsub.df, optim == TRUE), colour = I("orange"))
+```
+
