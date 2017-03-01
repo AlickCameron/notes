@@ -2,8 +2,7 @@
 title: 'MLR: Model Selection in R'
 author: "Math 430, Winter 2017"
 output:
-  beamer_presentation: default
-  ioslides_presentation: default
+  ioslides_presentation
 ---
 
 ```{r, include=FALSE}
@@ -231,5 +230,54 @@ qplot(x =vars, y = value, data = allsub.df, geom = c("point", "line")) +
   ylab("Value") + 
   scale_x_continuous(breaks=1:11) + 
   geom_point(data = subset(allsub.df, optim == TRUE), colour = I("orange"))
+```
+
+# Extracting goodness-of-fit measures
+
+## {.smaller}
+
+```{r}
+broom::glance(step_hwy)
+```
+
+Extract $R^2_{adj}$
+
+```{r}
+broom::glance(step_hwy)$adj.r.squared
+```
+
+## {.smaller}
+
+
+Calculate AIC
+```{r}
+# The first number is equiv. d.f., the second is AIC
+extractAIC(step_hwy, k = 2)
+```
+
+Calculate AICc
+
+```{r}
+n <- nrow(Highway)
+nslope <- length(step_hwy$coefficients) - 1
+extractAIC(step_hwy, k = 2) + 2 * (nslope + 1) * (nslope + 2) / (n - nslope - 1)
+```
+
+Calculate BIC
+
+```{r}
+extractAIC(step_hwy, k = log(n))
+```
+
+
+## Training and test data sets
+
+```{r eval=FALSE}
+# Select rows for a training data set
+train_id <- sample(1:nrow(df), size = round((2/3) * nrow(df)))
+
+# Create the training and test data sets
+train <- df[train_id,]
+test  <- df[-train_id,]
 ```
 
