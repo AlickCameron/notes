@@ -126,16 +126,14 @@ broom::tidy(belim)
 null_mod <- lm(log(rate) ~ 1, data = Highway)
 f <- formula(full_mod)
 fselect <- step(null_mod, scope = list(lower = ~ 1, 
-upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper = ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = "forward", trace = 0)
 ```
 
 ```{r, eval=FALSE}
-null_mod <- lm(slog(rate) ~ 1, data = Highway)
+null_mod <- lm(log(rate) ~ 1, data = Highway)
 fselect <- step(null_mod, scope = list(lower = ~ 1, 
-upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper = ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = "forward")
 ```
 
@@ -148,15 +146,13 @@ broom::tidy(fselect)
 
 ```{r, tidy=FALSE, include=FALSE}
 step_hwy <- step(null_mod, scope = list(lower = ~ 1, 
-upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper = ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = "both", trace=0)
 ```
 
 ```{r, tidy=FALSE, eval=FALSE}
 step_hwy <- step(null_mod, scope = list(lower = ~ 1, 
-upper =  ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper =  ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = "both")
 ```
 

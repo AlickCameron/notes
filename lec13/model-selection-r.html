@@ -223,36 +223,43 @@ full_mod_tform &lt;- lm(log(rate) ~ log(adt) + log(trks) + I(1/lane) + log(acpt)
 
 </article></slide><slide class=''><hgroup><h2>Forward selection</h2></hgroup><article  id="forward-selection" class="smaller">
 
-<pre class = 'prettyprint lang-r'>null_mod &lt;- lm(slog(rate) ~ 1, data = Highway)
+<pre class = 'prettyprint lang-r'>null_mod &lt;- lm(log(rate) ~ 1, data = Highway)
 fselect &lt;- step(null_mod, scope = list(lower = ~ 1, 
-upper = ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper = ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = &quot;forward&quot;)</pre>
 
 <pre class = 'prettyprint lang-r'>broom::tidy(fselect)</pre>
 
-<pre >##          term    estimate   std.error statistic      p.value
-## 1 (Intercept)  4.16654113 0.741064508  5.622373 2.666474e-06
-## 2        slim -0.03185201 0.010261763 -3.103951 3.832823e-03
-## 3    log(len) -0.23573454 0.084896763 -2.776720 8.867186e-03
-## 4        acpt  0.01100449 0.006669289  1.650025 1.081474e-01
-## 5   log(trks) -0.32903691 0.213483661 -1.541274 1.325068e-01</pre>
+<pre >##              term     estimate  std.error   statistic     p.value
+## 1     (Intercept)  2.122284499 0.95534397  2.22148730 0.034283129
+## 2            slim -0.001240547 0.01467532 -0.08453287 0.933213647
+## 3        log(len) -0.313267858 0.08812125 -3.55496377 0.001318954
+## 4       log(acpt)  0.290282436 0.10291806  2.82051992 0.008560433
+## 5  poly(lwid, 2)1 -0.340597367 0.27175343 -1.25333238 0.220095829
+## 6  poly(lwid, 2)2 -0.778909771 0.25408606 -3.06553523 0.004666478
+## 7  poly(shld, 2)1 -0.917057215 0.42976253 -2.13386963 0.041437529
+## 8  poly(shld, 2)2 -0.013503844 0.30087592 -0.04488177 0.964509178
+## 9       log(trks) -0.342058129 0.20960980 -1.63188044 0.113518148
+## 10            itg  0.153598077 0.12288303  1.24995348 0.221309869</pre>
 
 </article></slide><slide class=''><hgroup><h2>Stepwise selection</h2></hgroup><article  id="stepwise-selection" class="smaller">
 
 <pre class = 'prettyprint lang-r'>step_hwy &lt;- step(null_mod, scope = list(lower = ~ 1, 
-upper =  ~ log(adt) + log(trks) + lane + acpt + itg + slim + log(len) + 
-    lwid + shld + htype + sigs1),
+upper =  ~ log(adt) + log(trks) + I(1/lane) + log(acpt) + itg + slim + log(len) + poly(lwid, 2) + poly(shld, 2) + htype + log(sigs1)),
 direction = &quot;both&quot;)</pre>
 
 <pre class = 'prettyprint lang-r'>broom::tidy(step_hwy)</pre>
 
-<pre >##          term    estimate   std.error statistic      p.value
-## 1 (Intercept)  4.16654113 0.741064508  5.622373 2.666474e-06
-## 2        slim -0.03185201 0.010261763 -3.103951 3.832823e-03
-## 3    log(len) -0.23573454 0.084896763 -2.776720 8.867186e-03
-## 4        acpt  0.01100449 0.006669289  1.650025 1.081474e-01
-## 5   log(trks) -0.32903691 0.213483661 -1.541274 1.325068e-01</pre>
+<pre >##             term    estimate  std.error   statistic      p.value
+## 1    (Intercept)  2.05731539 0.55797123  3.68713528 0.0008951161
+## 2       log(len) -0.31583627 0.08133725 -3.88304606 0.0005260574
+## 3      log(acpt)  0.29490540 0.08573062  3.43990740 0.0017315283
+## 4 poly(lwid, 2)1 -0.34766034 0.25427502 -1.36726107 0.1817012875
+## 5 poly(lwid, 2)2 -0.78312449 0.24498872 -3.19657372 0.0032673201
+## 6 poly(shld, 2)1 -0.94261102 0.30037603 -3.13810336 0.0037965769
+## 7 poly(shld, 2)2 -0.02018253 0.28547297 -0.07069857 0.9441068560
+## 8      log(trks) -0.34589714 0.20121625 -1.71903182 0.0959128224
+## 9            itg  0.15622255 0.11691234  1.33623655 0.1915196786</pre>
 
 </article></slide><slide class=''><hgroup><h2>Using BIC rather than AIC</h2></hgroup><article  id="using-bic-rather-than-aic" class="smaller">
 
@@ -306,16 +313,16 @@ reg_summary &lt;- summary(regfit_full)</pre>
 
 <pre class = 'prettyprint lang-r'>broom::glance(step_hwy)</pre>
 
-<pre >##   r.squared adj.r.squared     sigma statistic     p.value df    logLik
-## 1 0.6960742     0.6603182 0.2698162  19.46735 2.06722e-08  5 -1.572629
+<pre >##   r.squared adj.r.squared     sigma statistic      p.value df   logLik
+## 1 0.7962987     0.7419783 0.2351582   14.6593 1.865432e-08  9 6.229883
 ##        AIC      BIC deviance df.residual
-## 1 15.14526 25.12663 2.475227          34</pre>
+## 1 7.540235 24.17585 1.658981          30</pre>
 
 <p>Extract \(R^2_{adj}\)</p>
 
 <pre class = 'prettyprint lang-r'>broom::glance(step_hwy)$adj.r.squared</pre>
 
-<pre >## [1] 0.6603182</pre>
+<pre >## [1] 0.7419783</pre>
 
 </article></slide><slide class=''><hgroup><h2></h2></hgroup><article  id="section-11" class="smaller">
 
@@ -324,7 +331,7 @@ reg_summary &lt;- summary(regfit_full)</pre>
 <pre class = 'prettyprint lang-r'># The first number is equiv. d.f., the second is AIC
 extractAIC(step_hwy, k = 2)</pre>
 
-<pre >## [1]   5.00000 -97.53195</pre>
+<pre >## [1]    9.000 -105.137</pre>
 
 <p>Calculate AICc</p>
 
@@ -332,13 +339,13 @@ extractAIC(step_hwy, k = 2)</pre>
 nslope &lt;- length(step_hwy$coefficients) - 1
 extractAIC(step_hwy, k = 2) + 2 * (nslope + 1) * (nslope + 2) / (n - nslope - 1)</pre>
 
-<pre >## [1]   6.764706 -95.767241</pre>
+<pre >## [1]  15.00000 -99.13697</pre>
 
 <p>Calculate BIC</p>
 
 <pre class = 'prettyprint lang-r'>extractAIC(step_hwy, k = log(n))</pre>
 
-<pre >## [1]   5.00000 -89.21414</pre>
+<pre >## [1]   9.00000 -90.16492</pre>
 
 </article></slide><slide class=''><hgroup><h2>Training and test data sets</h2></hgroup><article  id="training-and-test-data-sets">
 
