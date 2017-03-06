@@ -1,0 +1,177 @@
+---
+title: "Bootstrapping Regression Models"
+author: "Math 430, Winter 2017"
+output: ioslides_presentation
+---
+
+# Motivation
+
+```{r include=FALSE}
+library(car)
+library(ggplot2)
+data(Transact)
+```
+
+## Transactions data
+
+Data on transaction times in branch offices of a large Australian bank.
+
+Variable | Description
+-------- | -----------
+`time`   | total transaction time (minutes)
+`t1`     | \# type 1 transactions
+`t2`     | \# type 2 transactions
+
+## 
+
+```{r echo = FALSE, fig.width = 6, fig.height = 6, fig.align='center'}
+pairs(time ~ ., data = Transact)
+```
+
+##
+
+```{r fig.width = 8, fig.height = 3}
+transact_mod <- lm(time ~ t1 + t2, data = Transact)
+residualPlots(transact_mod, type = "rstandard", 
+              layout = c(1, 3), tests = FALSE)
+```
+
+## 
+
+```{r fig.width = 7, fig.height = 3.5}
+avPlots(transact_mod,layout = c(1,2))
+```
+
+## 
+
+```{r fig.width = 8, fig.height = 3}
+mmps(transact_mod, layout = c(1,3))
+```
+
+## {.smaller}
+
+```{r}
+ncvTest(transact_mod)
+ncvTest(transact_mod, ~ t1)
+ncvTest(transact_mod, ~ t2)
+```
+
+
+
+
+
+
+</div>
+
+# The Bootstrap
+
+## Why bootstrap?
+
+- We need an alternative method when the assumptions are suspect, or where standard methods are not readily available
+
+- Can be used to
+    + compute standard errors
+    + compute confidence intervals
+    + conduct tests
+    
+## Case resampling bootstrap
+
+1. Number cases in data set from 1 to $n$. 
+
+2. Take a random sample <u>with replacement</u> of size $n$ from these numbers.
+
+3. Create a new data set by pulling the rows (cases) from the original data set that were selected in the random sample.
+    
+4. Fit the regression model to this new data set and save the values of the estimated coefficients, or other summary statistics.
+
+5. Repeat steps 2-4 *R* times.
+
+We can build confidence intervals from this list of *R* sets of coefficients.
+
+## Case resampling bootstrap in R {.smaller}
+
+```{r, message=FALSE}
+library(car) # For Boot function
+transact_boot <- Boot(transact_mod, R = 1999, method = "case")
+summary(transact_boot)
+```
+
+```{r}
+# Compare to the original fit
+broom::tidy(transact_mod)
+```
+
+
+## Case resampling bootstrap in R
+
+```{r, fig.width = 8.5, fig.height = 3.5}
+hist(transact_boot, col = "gray", layout = c(1,3))
+```
+
+
+## Bootstrap confidence intervals
+
+**Method 1:** Normal
+
+$$\text{Estimate} \pm z^*_{\alpha/2} SE$$
+
+where we use the bias corrected estimate: $statistic - \widehat{bias}$
+
+```{r}
+confint(transact_boot, level = .95, type = "norm")
+```
+
+
+## Bootstrap confidence intervals
+
+**Method 2:** CIs based on percentiles of the bootstrap distribution
+
+$$T^*_{\text{(lower)}} \quad \text{to} \quad T^*_{\text{(upper)}}$$
+
+```{r}
+confint(transact_boot, level = .95, type = "perc")
+```
+
+## Bootstrap confidence intervals
+
+**Method 3:** Bias corrected and accelerated (BC$_a$) CIs
+
+- More complicated, so don't worry about the formula
+- Usually performs better than the percentile bootstrap CI
+
+```{r}
+confint(transact_boot, level = .95, type = "bca")
+```
+
+
+
+## Residual bootstrap
+
+1. Fit the regression model to get $\widehat{\bf y} = \bf X \widehat{ \boldsymbol\beta}$ and compute the residuals, $e_i = y_i - \widehat{y}_i$
+
+2. Obtain a random sample, <u>with replacement</u>, from the residuals to get a new sample (${\bf e^\prime} = (e^*_1, \ldots, e^*_n)$)
+
+3. Create simulated $y$ values by $\bf y^* = \bf X \widehat{ \boldsymbol\beta} + e^*$
+
+4. Fit the regression model to the simulated $y^*$ values and save the values of the estimated coefficients, or other summary statistics
+
+5. Repeat steps 2-4 R times
+
+
+We can build confidence intervals from this list of *R* sets of coefficients.
+
+## Residual bootstrap in R {.smaller}
+
+Note: This is only for illustrating how to use R to run the residual bootstrap, as there is evidence of nonconstant variance.
+
+```{r}
+transact_boot2 <- Boot(transact_mod, R = 1999, method = "residual")
+summary(transact_boot2) # print summary
+confint(transact_boot2, level = .95, type = "bca") # calc. CIs
+```
+
+## Case vs. Residual
+
+- The residual bootstrap assumes: (1) linearity, and (2) constant variance.
+
+- If this is true, then the residual bootstrap can be more accurate than the case bootstrap.
